@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassMan Console</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="tab-create" id="tabCreate">Create</div>
+    <div class="tab-update" id="tabUpdate">Update</div>
+    <div class="connect-wrap"><button type="button" id="pwdStart">Connect</button></div>
+    <form action="" id="createForm" class="create-wrap">
+            <input type="text" id="pwdServiceName" placeholder="Service"/>
+            <input type="text" id="pwdLogin" placeholder="Login"/>
+            <input type="text" id="pwdPassword" placeholder="Password"/>
+            <div class="multi-input-wrap"><input type="text" placeholder="pssword generation rules" id="pwdPasswordRule"/><input type="text" placeholder="min length" id="pwdPasswordRuleMinLength"/><input type="text" placeholder="max length" id="pwdPasswordRuleMaxLength"/></div>
+            <button type="submit" id="pwdSubmit">Send</button>
+    </form>
+    <form action="" id="updateForm" class="update-wrap">
+            <input type="text" id="currentPwdServiceName" placeholder="Service"/>
+            <input type="text" id="currentPwdLogin" placeholder="Login"/>
+            <div class="multi-input-wrap"><input type="text" id="currentPwdPasswordRule" placeholder="pssword generation rules"/><input type="text" id="currentPwdPasswordRuleMinLength" placeholder="min length"/><input type="text" id="currentPwdPasswordRuleMaxLength" placeholder="max length"/></div>
+            <button id="pwdDelete"> x </button>
+            <button id="pwdUpdate">Update</button>
+    </form>
+    
+    <script src="./script.js" type="module"></script>
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html><meta http-equiv=Content-Type content="text/html; charset=UTF-8"><meta name=viewport content="width=device-width, initial-scale=1.0"><title>PassMan Console</title><link rel=stylesheet href=/passman/passman.c198d2e7.css><body>
+    <div class=tab-create id=tabCreate>Create</div>
+    <div class=tab-update id=tabUpdate>Update</div>
+    <div class=connect-wrap><button type=button id=pwdStart>Connect</button></div>
+    <form id=createForm class=create-wrap>
+            <input id=pwdServiceName placeholder=Service>
+            <input id=pwdLogin placeholder=Login>
+            <input id=pwdPassword placeholder=Password>
+            <div class=multi-input-wrap><input placeholder="pssword generation rules" id=pwdPasswordRule><input placeholder="min length" id=pwdPasswordRuleMinLength><input placeholder="max length" id=pwdPasswordRuleMaxLength></div>
+            <button id=pwdSubmit>Send</button>
+    </form>
+    <form id=updateForm class=update-wrap>
+            <input id=currentPwdServiceName placeholder=Service>
+            <input id=currentPwdLogin placeholder=Login>
+            <div class=multi-input-wrap><input id=currentPwdPasswordRule placeholder="pssword generation rules"><input id=currentPwdPasswordRuleMinLength placeholder="min length"><input id=currentPwdPasswordRuleMaxLength placeholder="max length"></div>
+            <button id=pwdDelete> x </button>
+            <button id=pwdUpdate>Update</button>
+    </form>
+    
+    <script src=/passman/passman.305539b7.js type=module></script>
+
+
+

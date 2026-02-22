@@ -1,0 +1,17 @@
+{
+  "name": "SmartHub",
+  "source": "index.html",
+  "dist-dir": "docs",
+  "scripts": {
+    "start": "rm -rf docs & set NODE_ENV=dev & parcel --dist-dir=docs",
+    "build": "rm -rf docs & set NODE_ENV=prod & parcel build --dist-dir=docs --public-url=/passman & bash ./sw.sh",
+    "buildX": "rm -rf ./docs/* && NODE_ENV=prod parcel build --dist-dir=docs --public-url=/glypher && ./sw.sh"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "parcel": "^2.15.4"
+  }
+}
