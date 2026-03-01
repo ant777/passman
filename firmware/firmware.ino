@@ -1,22 +1,21 @@
-//
-#include "FS.h"
-//#include "SD.h"
-#include "SPI.h"
-//#include "SD_MMC.h"
+//#include "FS.h"
+//#include "SPI.h"
 #include "SD_MMC.h"
 
-#include "ff.h" // FatFs include file
-#include "driver/sdmmc_host.h"
-#include "driver/sdspi_host.h"
-#include "esp_vfs_fat.h"
+//#include "driver/sdmmc_host.h"
+//#include "driver/sdspi_host.h"
+//#include "esp_vfs_fat.h"
 #include "pin_config.h"
-#include "sdmmc_cmd.h"
+//#include "sdmmc_cmd.h"
 #include "USBMSC.h"
 
-#include "TFT_eSPI.h" 
 #include "USB.h"
 #include "USBHIDKeyboard.h"
+
+//#include "ff.h" // FatFs include file
+#include "TFT_eSPI.h" 
 #include "OneButton.h" // https://github.com/mathertel/OneButton
+#include <FastLED.h>  
 
 
 #include "menu_config.h"
@@ -31,7 +30,7 @@
 #include <sstream> // std::istringstream
 #include <vector>
 #include <cctype> // std::isdigit
-#include <FastLED.h>  
+
 #define LED_DI_PIN     40
 #define LED_CI_PIN     39
 
