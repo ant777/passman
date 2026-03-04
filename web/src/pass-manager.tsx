@@ -2,17 +2,22 @@ import { PasswordEntry } from "./app/App";
 
 const SERVICE_UUID = '6fe56dde-8e9b-45c5-96ee-7c8aea360a94';
 const CHARACTERISTIC_UUID = '46017b0a-60bd-4d8d-9fd9-22d15de3ae0f';
+
+interface BluetoothDevice {
+    addEventListener: Function;
+
+}
 export class PassManagerBLE {
     constructor() {
-
+        this.bluetoothDevice = null;
     }
 
-    bluetoothDevice = null;
+    bluetoothDevice: BluetoothDevice | null;
 
     service = null;
     gattServer = {};
 
-    async init (dcCb, listCb){
+    async init (dcCb: Function, listCb: Function){
         try {
             var deviceOptions = {
                 optionalServices: [SERVICE_UUID, CHARACTERISTIC_UUID, 0xfe95, 0x1f10],
@@ -35,7 +40,7 @@ export class PassManagerBLE {
 
             console.log(deviceOptions)
 
-            if (this.bluetoothDevice != null) this.bluetoothDevice.gatt.disconnect();
+            if (this.bluetoothDevice !== null) this.bluetoothDevice.gatt.disconnect();
             // resetVariables();
             // addLog("Searching for devices");
             // connectTrys = 0;
@@ -59,6 +64,18 @@ export class PassManagerBLE {
         // timestampContainer.innerHTML = getDateTime();
     }
 
+    parseListItem(rawItem: string): PasswordEntry {
+        const splitted = rawItem.split('||');
+        const lengthRange = (splitted[4] || '').split('-');
+        return {
+            id: splitted[0],
+            service: splitted[1],
+            username: splitted[2],
+            ruleWhitelist: splitted[3],
+            ruleLimitsMin: parseInt(lengthRange[0]),
+            ruleLimitsMax: parseInt(lengthRange[1])
+        };
+    }
 
     async connect(listCb) {
 
@@ -85,34 +102,34 @@ export class PassManagerBLE {
                     console.log('Characteristic value changed:', value);
                     const parsed = value.trim().split('\n');
                     if (parsed[0].trim() === 'list') {
-                        listCb(parsed.slice(1).map(it => ({id: it.split('||')[0], service: it.split('||')[1], username: it.split('||')[2]})));
+                        listCb(parsed.slice(1).map(this.parseListItem));
                         resolve();
                     } else {
 
-                        window.currentPwdServiceName.value = parsed[0];
-                        window.currentPwdLogin.value = parsed[1];
-                        const ruleLimits = parsed[2];
-                        const rule = ruleLimits.split('||')[0];
-                        window.currentPwdPasswordRuleMinLength.value = "";
-                        window.currentPwdPasswordRuleMaxLength.value = "";
-                        if(ruleLimits.split('||')[1]) {
-                            window.currentPwdPasswordRuleMinLength.value = ruleLimits.split('||')[1].split('-')[0];
-                            window.currentPwdPasswordRuleMaxLength.value =  ruleLimits.split('||')[1].split('-')[1];
+                        // window.currentPwdServiceName.value = parsed[0];
+                        // window.currentPwdLogin.value = parsed[1];
+                        // const ruleLimits = parsed[2];
+                        // const rule = ruleLimits.split('||')[0];
+                        // window.currentPwdPasswordRuleMinLength.value = "";
+                        // window.currentPwdPasswordRuleMaxLength.value = "";
+                        // if(ruleLimits.split('||')[1]) {
+                        //     window.currentPwdPasswordRuleMinLength.value = ruleLimits.split('||')[1].split('-')[0];
+                        //     window.currentPwdPasswordRuleMaxLength.value =  ruleLimits.split('||')[1].split('-')[1];
 
-                        }
-                        window.currentPwdPasswordRule.value = rule;
-                        if (stringValue.trim()) {
+                        // }
+                        // window.currentPwdPasswordRule.value = rule;
+                        // if (stringValue.trim()) {
 
-                            document.body.classList.remove('show-create');
-                            document.body.classList.add('show-update');
+                        //     document.body.classList.remove('show-create');
+                        //     document.body.classList.add('show-update');
 
-                        } else {
+                        // } else {
 
-                            document.body.classList.add('show-create');
-                            document.body.classList.remove('show-update');
+                        //     document.body.classList.add('show-create');
+                        //     document.body.classList.remove('show-update');
 
-                        }
-                        console.log(`Value as String: ${stringValue}`);
+                        // }
+                        // console.log(`Value as String: ${stringValue}`);
                     }
                     // Example: Read as an integer
                     // const intValue = value.getInt16(0, true); // little-endian
@@ -129,23 +146,28 @@ export class PassManagerBLE {
         }
     }
 
-    async submitUpdate() {
-        const characteristic = await this.service.getCharacteristic(CHARACTERISTIC_UUID);
-        
-        console.log("Found the LED characteristic: ", characteristic.uuid);
-        let rule = window.currentPwdServiceName.value || 'rnd1';
-        if (window.currentPwdPasswordRuleMinLength.value || window.currentPwdPasswordRuleMaxLength.value) {
-            if(!window.currentPwdPasswordRuleMinLength.value || !window.currentPwdPasswordRuleMaxLength.value) {
-                alert('wrong pwd rule range');
-                return;
+    async submitUpdate(pwdData: PasswordEntry) {
+        setTimeout(async () => {
+
+            console.warn(pwdData);
+            const characteristic = await this.service.getCharacteristic(CHARACTERISTIC_UUID);
+            
+            console.log("Found the LED characteristic: ", characteristic.uuid);
+
+            let rule = pwdData.ruleWhitelist || 'rnd1';
+            if (pwdData.ruleLimitsMin || pwdData.ruleLimitsMax) {
+                if(!pwdData.ruleLimitsMin || !pwdData.ruleLimitsMax) {
+                    alert('wrong pwd rule range');
+                    return;
+                }
+                rule += '||'+ pwdData.ruleLimitsMin +'-'+ pwdData.ruleLimitsMax;
             }
-            rule += '||'+ window.currentPwdPasswordRuleMinLength.value +'-'+ window.currentPwdPasswordRuleMaxLength.value;
-        }
-        const data = new TextEncoder().encode('update\n' + window.currentPwdServiceName.value + '\n' + window.currentPwdLogin.value + '\n' + rule);
-            characteristic.writeValueWithoutResponse(data);
+            const data = new TextEncoder().encode('update\n' + pwdData.id + '\n' + pwdData.service + '\n' + pwdData.username + '\n' + rule);
+                characteristic.writeValueWithoutResponse(data);
+        }, 2000);
     }
 
-    async submit(pwdData: Omit<PasswordEntry, "id">) {
+    async submit(pwdData: PasswordEntry) {
         const characteristic = await this.service.getCharacteristic(CHARACTERISTIC_UUID);
         
         console.log("Found the LED characteristic: ", characteristic.uuid, pwdData  );
@@ -157,23 +179,14 @@ export class PassManagerBLE {
             }
             rule += '||'+ pwdData.ruleLimitsMin +'-'+ pwdData.ruleLimitsMax;
         }
-        const data = new TextEncoder().encode('create\n' + pwdData.service + '\n' + pwdData.username + '\n' + rule + '\n' + pwdData.password);
+        const data = new TextEncoder().encode('create\n' + '\n' + pwdData.service + '\n' + pwdData.username + '\n' + rule + '\n' + pwdData.password);
             characteristic.writeValueWithoutResponse(data);
 
     }
 
-    async deleteItem() {
+    async deleteItem(id: string) {
             
-        let rule = window.currentPwdPasswordRule.value || 'rnd1';
-        if (window.currentPwdPasswordRuleMinLength.value || window.currentPwdPasswordRuleMaxLength.value) {
-            if(!window.currentPwdPasswordRuleMinLength.value || !window.currentPwdPasswordRuleMaxLength.value) {
-                alert('wrong pwd rule range');
-                return;
-            }
-            rule += '||'+ window.currentPwdPasswordRuleMinLength.value +'-'+ window.currentPwdPasswordRuleMaxLength.value;
-        }
-            console.warn('remove_'+ (window.currentPwdServiceName.value + '\n' + window.currentPwdLogin.value + '\n' + rule));
-            const data = new TextEncoder().encode('remove_'+ (window.currentPwdServiceName.value + '\n' + window.currentPwdLogin.value + '\n' + rule));
+            const data = new TextEncoder().encode('remove\n' + id);
             this.characteristic.writeValueWithoutResponse(data);
         
     }

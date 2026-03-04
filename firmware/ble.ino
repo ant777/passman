@@ -63,11 +63,23 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
             }
             return;
           }
+          if (value.find("remove") == 0) {
+              char contents[512];
+              strcpy(contents, value.c_str());
+              char* pch = strtok(contents, "\n");
+              String parsedInstruction = String(pch);
+              pch = strtok(NULL, "\n");
+              String parsedFilename = String(pch);
+              setEnqueueRemove(parsedFilename);
+            return;
+          }
           
           char contents[512];
           strcpy(contents, value.c_str());
           char* pch = strtok(contents, "\n");
           String parsedInstruction = String(pch);
+          pch = strtok(NULL, "\n");
+          String parsedFilename = String(pch);
           pch = strtok(NULL, "\n");
           String parsedService = String(pch);
           pch = strtok(NULL, "\n");
@@ -79,7 +91,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
           if (parsedService && parsedInstruction == "create") {
             enqueueNewPwd(parsedService, parsedLogin, parsedPwdRule, parsedPwd);
           } else if(parsedService && parsedInstruction == "update"){
-            enqueueUpdatePwd(parsedService, parsedLogin, parsedPwdRule);
+            enqueueUpdatePwd(parsedFilename, parsedService, parsedLogin, parsedPwdRule);
           }
 //            Serial.print("Characteristic event, written: ");
 //            Serial.println(static_cast<int>(value[0])); // Print the integer value

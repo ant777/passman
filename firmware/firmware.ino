@@ -577,7 +577,7 @@ String getCommonDataString() {
     const String fName1 = '/' + String(item.c_str());
     String readValue = readFile(SD_MMC, fName1.c_str());
     parsePwdFile(readValue);
-    result += String(fName1) + "||" + parsedResult[0] + "||" + parsedResult[1] + "\n";
+    result += String(fName1) + "||" + parsedResult[0] + "||" + parsedResult[1] + "||" + parsedResult[2] + "\n";
 
   }
   return result;
@@ -624,19 +624,23 @@ String newServiceName = "";
 String newLogin = "";
 String newPwdRule = "";
 String newPwd = "";
+String enqueueRemove = "";
 bool enqueueRemoveCurrent = false;
 bool enqueueCreate = false;
-bool enqueueUpdate = false;
+String enqueueUpdate = "";
 
 void setEnqueueRemoveCurrent() {
   enqueueRemoveCurrent = true;
 }
+void setEnqueueRemove (String path) {
+  enqueueRemove = path;
+}
 
-void enqueueUpdatePwd(String nServiceName, String nLogin, String nPwdRule) {
+void enqueueUpdatePwd(String fileName, String nServiceName, String nLogin, String nPwdRule) {
   newServiceName = nServiceName;
   newLogin = nLogin;
   newPwdRule = nPwdRule;
-  enqueueUpdate = true;
+  enqueueUpdate = fileName;
 }
 
 void enqueueNewPwd(String nServiceName, String nLogin, String nPwdRule, String nPwd) {
@@ -661,6 +665,13 @@ void loop() {
     renderPass();
     updateCurrentStateBle();
   }
+  if (enqueueRemove != "") {
+    char fName[120];
+    strcpy(fName, enqueueRemove.c_str());
+    filenames.erase(std::remove(filenames.begin(), filenames.end(), std::string(enqueueRemove.c_str())), filenames.end());
+    enqueueRemove = "";
+    deleteFile(fName);
+  }
   if (enqueueCreate && newServiceName) {
     enqueueCreate = false;
     String newName = createNewPwd(newServiceName, newLogin, newPwdRule, newPwd);
@@ -675,9 +686,10 @@ void loop() {
     renderPass();
     updateCurrentStateBle();
   }
-  if (enqueueUpdate && newServiceName) {
-    enqueueUpdate = false;
-    const char* fName = getCurrentFileName().c_str();
+  if (enqueueUpdate != "" && newServiceName) {
+    char fName[120];
+    strcpy(fName, enqueueUpdate.c_str());
+    enqueueUpdate = "";
     updatePwdData(SD_MMC, fName, newServiceName, newLogin, newPwdRule);
     newServiceName = "";
     newLogin = "";

@@ -32,14 +32,13 @@ function generatePassword(options: {
 
 export function PasswordForm({ onSave, editEntry, onCancelEdit }: PasswordFormProps) {
   const [service, setService] = useState(editEntry?.service ?? "");
-  const [url, setUrl] = useState(editEntry?.url ?? "");
   const [username, setUsername] = useState(editEntry?.username ?? "");
   const [password, setPassword] = useState(editEntry?.password ?? "");
-  const [minLength, setMinLength] = useState(12);
-  const [maxLength, setMaxLength] = useState(20);
-  const [uppercase, setUppercase] = useState(true);
-  const [lowercase, setLowercase] = useState(true);
-  const [numbers, setNumbers] = useState(true);
+  const [minLength, setMinLength] = useState(editEntry?.ruleLimitsMin || 12);
+  const [maxLength, setMaxLength] = useState(editEntry?.ruleLimitsMin || 20);
+  const [uppercase, setUppercase] = useState(editEntry?.ruleWhitelist?.includes('A-Z') || false);
+  const [lowercase, setLowercase] = useState(editEntry?.ruleWhitelist?.includes('a-z') || false);
+  const [numbers, setNumbers] = useState(editEntry?.ruleWhitelist?.includes('0-9') || false);
   const [symbols, setSymbols] = useState(true);
 
   const handleGenerate = () => {
@@ -50,7 +49,7 @@ export function PasswordForm({ onSave, editEntry, onCancelEdit }: PasswordFormPr
   };
 
   const handleSubmit = () => {
-    if (!service.trim() || !username.trim() || !password.trim()) return;
+    if (!service.trim() || !username.trim()) return;
     let ruleWhitelist = "";
     if(uppercase) {
       ruleWhitelist += 'A-Z';
@@ -69,7 +68,6 @@ export function PasswordForm({ onSave, editEntry, onCancelEdit }: PasswordFormPr
     onSave({ service: service.trim(), username: username.trim(), password, ruleWhitelist, ruleLimitsMin, ruleLimitsMax });
     if (!editEntry) {
       setService("");
-      setUrl("");
       setUsername("");
       setPassword("");
     }
@@ -261,7 +259,7 @@ export function PasswordForm({ onSave, editEntry, onCancelEdit }: PasswordFormPr
 
       <button
         onClick={handleSubmit}
-        disabled={!service.trim() || !username.trim() || !password.trim()}
+        disabled={!service.trim() || !username.trim()}
         className="disabled:opacity-40 disabled:cursor-not-allowed px-6 py-2.5 rounded-md transition-colors flex items-center gap-2"
         style={{
           backgroundColor: "var(--pm-accent)",

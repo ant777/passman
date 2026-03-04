@@ -9,44 +9,17 @@ export interface PasswordEntry {
   id: string;
   service: string;
   username: string;
-  ruleWhitelist?: string;password?:string;
+  password?:string;
+  ruleWhitelist?: string;
   ruleLimitsMin?: number;
   ruleLimitsMax?: number;
 }
-
-const SAMPLE_ENTRIES: PasswordEntry[] = [
-  {
-    id: "1",
-    service: "GitHub",
-    username: "dev@example.com",
-  },
-  {
-    id: "2",
-    service: "Google",
-    username: "user@gmail.com",
-  },
-  {
-    id: "3",
-    service: "Netflix",
-    username: "viewer@email.com",
-  },
-  {
-    id: "4",
-    service: "AWS Console",
-    username: "admin@company.io",
-  },
-  {
-    id: "5",
-    service: "Slack",
-    username: "team@workspace.com",
-  },
-];
 
 const passManagerBLE = new PassManagerBLE();
 
 function PasswordManager() {
   const { theme, toggleTheme } = useTheme();
-  const [entries, setEntries] = useState<PasswordEntry[]>(SAMPLE_ENTRIES);
+  const [entries, setEntries] = useState<PasswordEntry[]>([]);
   const [editEntry, setEditEntry] = useState<PasswordEntry | null>(null);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -56,9 +29,9 @@ function PasswordManager() {
     if (editEntry) setShowForm(true);
   }, [editEntry]);
 
-  const handleSave = (data: Omit<PasswordEntry, "id">) => {
+  const handleSave = (data: PasswordEntry) => {
     if (editEntry) {
-      passManagerBLE.submitUpdate()
+      passManagerBLE.submitUpdate({id: editEntry.id, ...data})
       setEntries((prev) =>
         prev.map((e) => (e.id === editEntry.id ? { ...e, ...data } : e))
       );
@@ -71,6 +44,7 @@ function PasswordManager() {
   };
 
   const handleDelete = (id: string) => {
+    passManagerBLE.deleteItem(id);
     setEntries((prev) => prev.filter((e) => e.id !== id));
     if (editEntry?.id === id) {
       setEditEntry(null);
@@ -170,7 +144,7 @@ function PasswordManager() {
               onClick={async () => {
                 const device = await passManagerBLE.init(() => {
                   setConnected(false)
-                }, (entries) => {
+                }, (entries: PasswordEntry[]) => {
                   setEntries(entries)
                 });
                 if(device)

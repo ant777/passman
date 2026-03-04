@@ -141,6 +141,7 @@ void switchConfirmationItem() {
 
 }
 void renderConfirmation() {
+  currentConfirmationItem = 1;
   tft.fillScreen(THEME_BG_COLOR);
   tft.setTextFont(2);
   tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
