@@ -569,6 +569,20 @@ String getCurrentDataString() {
   return currentService + "\n" + currentLogin + "\n" + currentPwdRule;
 }
 
+String getCommonDataString() {
+
+  String result = "list\n";
+  for(std::string item : filenames) {
+
+    const String fName1 = '/' + String(item.c_str());
+    String readValue = readFile(SD_MMC, fName1.c_str());
+    parsePwdFile(readValue);
+    result += String(fName1) + "||" + parsedResult[0] + "||" + parsedResult[1] + "\n";
+
+  }
+  return result;
+}
+
 void setup() {
   // make pin 0 an input and turn on the pull-up resistor so it goes high unless
   // connected to ground:

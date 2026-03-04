@@ -16,8 +16,8 @@
 ## Burning usb stick
 1. Get a T-dongle S3 (ESP32S3) stick (more details at [https://github.com/Xinyuan-LilyGO/T-Dongle-S3/blob/main/docs/en/t-dongle-s3/REAMDE.MD])
 2. Open firmware/firmware.ino in Arduino IDE 
-3. Install dependencies
-    a. TFT_eSPI at version 2.4.78
+3. Install dependencies more details at [https://github.com/Xinyuan-LilyGO/T-Dongle-S3/blob/main/docs/en/t-dongle-s3/REAMDE.MD#arduino-ide-quick-start]
+    a. TFT_eSPI at version 2.4.78 https://github.com/Bodmer/TFT_eSPI
     b. OneButton at version 2.0.2 https://github.com/mathertel/OneButton
     c. FastLED at version 3.5.0 https://github.com/FastLED/FastLED
 3. Adjust Arduino IDE as per image below ![Arduino burner config](firmware-burner-arduino-config.png "Arduino config")
@@ -34,3 +34,5 @@
 6. Select PassMan device from the bluetooth devic list and confirm by clicking on Pair button
 7. On the stick's screen a bluetooth connection confirmation message should appear, confirm by navigating to Yes option and double-press stick's button
 8. Once stick is connected to the page - it is possible to create new items or update and remove the item that is visible on the stick's screen
+
+python3 /home/ant777/snap/arduino/85/.arduino15/packages/esp32/tools/esptool_py/4.5.1/esptool.py --chip esp32s3 merge_bin --flash_mode dio --flash_size keep --flash_freq 80m 0x0 firmware.ino.bootloader.bin 0x00008000 firmware.ino.partitions.bin 0x00010000 firmware.ino.bin -o merged.bin

@@ -29,7 +29,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
 void allowConnection() {
  deviceAllowed = true;
  
-            String dataStr = getCurrentDataString();
+            String dataStr = getCommonDataString();
             pCharacteristic->setValue(String(dataStr).c_str());
             pCharacteristic->notify();
 };
