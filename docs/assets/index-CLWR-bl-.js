@@ -118,7 +118,7 @@ Error generating stack: `+o.message+`
 `+h.service+`
 `+h.username+`
 `+M);d.writeValueWithoutResponse(N)},2e3)}async submit(h){const d=await this.service.getCharacteristic(Tl);console.log("Found the LED characteristic: ",d.uuid,h);let M=h.ruleWhitelist||"rnd1";if(h.ruleLimitsMin||h.ruleLimitsMax){if(!h.ruleLimitsMin||!h.ruleLimitsMax){alert("wrong pwd rule range");return}M+="||"+h.ruleLimitsMin+"-"+h.ruleLimitsMax}const N=new TextEncoder().encode(`create
-
+new
 `+h.service+`
 `+h.username+`
 `+M+`

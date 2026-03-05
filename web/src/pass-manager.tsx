@@ -179,7 +179,7 @@ export class PassManagerBLE {
             }
             rule += '||'+ pwdData.ruleLimitsMin +'-'+ pwdData.ruleLimitsMax;
         }
-        const data = new TextEncoder().encode('create\n' + '\n' + pwdData.service + '\n' + pwdData.username + '\n' + rule + '\n' + pwdData.password);
+        const data = new TextEncoder().encode('create\n' + 'new\n' + pwdData.service + '\n' + pwdData.username + '\n' + rule + '\n' + pwdData.password);
             characteristic.writeValueWithoutResponse(data);
 
     }
