@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/passman/0.0.15/sw.js', { scope: '/passman/0.0.15/' })})}

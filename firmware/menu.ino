@@ -1,26 +1,42 @@
 
 #include "menu_config.h"
+const int shorterMenuItemsLength = 3;
+String shorterMenuItems[shorterMenuItemsLength] = {/*MENU_ITEM_NEW*/MENU_ITEM_ENABLE_BT,  MENU_ITEM_DUMP_ALL, "Version: " + FIRMWARE_VERSION};
+
 const int menuItemsLength = 5;
-String menuItems[menuItemsLength] = {/*MENU_ITEM_NEW*/MENU_ITEM_ENABLE_BT, /*MENU_ITEM_EDIT,*/MENU_ITEM_EDIT_PWD_REGENERATE,  MENU_ITEM_PREV_PWD, /*MENU_ITEM_DUMP_ITEM,*/ MENU_ITEM_DUMP_ALL, "Version: " + FIRMWARE_VERSION};
+String menuItems[menuItemsLength] = {/*MENU_ITEM_NEW*/MENU_ITEM_ENABLE_BT, /*MENU_ITEM_EDIT,*/MENU_ITEM_EDIT_PWD_GENERATE,  MENU_ITEM_PREV_PWD, /*MENU_ITEM_DUMP_ITEM,*/ MENU_ITEM_DUMP_ALL, "Version: " + FIRMWARE_VERSION};
 
 const int subMenuItemsLength = 5;
 String subMenuItems[subMenuItemsLength] = {MENU_ITEM_EDIT_SERVICE, MENU_ITEM_EDIT_LOGIN, MENU_ITEM_EDIT_PWD_GENERATE, MENU_ITEM_EDIT_PWD_RULES, MENU_ITEM_EDIT_PWD_REGENERATE};
 
 int currentMenuItem = 0;
 bool useSubmenu = false;
+bool shorterMenu = false;
 
 String getCurrentMenuItem() {
   if (useSubmenu) {    
     return subMenuItems[currentMenuItem];
   }
+  if (shorterMenu) {    
+    return shorterMenuItems[currentMenuItem];
+  }
   return menuItems[currentMenuItem];
 }
 
-void renderMainMenu() {
+void renderMainMenuShort() {
+  shorterMenu = true;
   currentMenuItem = 0;
   useSubmenu = false;
   renderMenu();
 }
+
+void renderMainMenu() {
+  shorterMenu = false;
+  currentMenuItem = 0;
+  useSubmenu = false;
+  renderMenu();
+}
+
 void redrawMainMenu() {
   renderMenu();
 }
@@ -32,7 +48,29 @@ void renderSubMenu() {
 }
 
 
+void renderPassList(String list[5], int selectedInd, int startInd) {
+  
+  tft.fillScreen(THEME_BG_COLOR);
+  tft.setTextFont(2);
+  
+  static int16_t bx, by; static uint16_t bw, bh;
+  bh = tft.fontHeight();
+  bx = 0;
+  by = 0;
+  for (int i = 0; i < 5; i ++) {
+    const String npp = String(startInd + i+1) + String(". ");
 
+    if (i == selectedInd) {
+      
+      tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
+    }
+    if(list[i] != "") {
+      
+      tft.drawString(npp + list[i], bx, by + i*bh);
+    }
+    tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
+  }
+}
 
 void renderMenu() {
   tft.fillScreen(THEME_BG_COLOR);
@@ -48,7 +86,7 @@ void renderMenu() {
   if (useSubmenu) {
     
     for (int i = 0; i < subMenuItemsLength; i ++) {
-      const String npp = String(i) + String(". ");
+      const String npp = String(i+1) + String(". ");
   
       if(i == currentMenuItem) {
         
@@ -62,24 +100,40 @@ void renderMenu() {
       tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
     }
   } else {
+    if (shorterMenu) {
+      for (int i = 0; i < shorterMenuItemsLength; i ++) {
+        const String npp = String(i+1) + String(". ");
     
-    for (int i = 0; i < menuItemsLength; i ++) {
-      const String npp = String(i) + String(". ");
+        if(i == currentMenuItem) {
+          
+          tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
+        }
   
-      if(i == currentMenuItem) {
-        
-        tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
+          tft.drawString(npp + shorterMenuItems[i], bx, by + i*bh);
+        tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
       }
-
-        tft.drawString(npp + menuItems[i], bx, by + i*bh);
-      tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
+      
+    } else {
+      
+      for (int i = 0; i < menuItemsLength; i ++) {
+        const String npp = String(i+1) + String(". ");
+    
+        if(i == currentMenuItem) {
+          
+          tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
+        }
+  
+          tft.drawString(npp + menuItems[i], bx, by + i*bh);
+        tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
+      }
     }
+    
   }
 }
 
 void switchMenuItem() {
   const int prevMenuItem = currentMenuItem;
-  if(!useSubmenu && currentMenuItem == menuItemsLength - 1) {
+  if(!useSubmenu && ((!shorterMenu && currentMenuItem == menuItemsLength - 1) || (shorterMenu && currentMenuItem == shorterMenuItemsLength - 1))) {
     currentMenuItem = 0;
   } else if(useSubmenu && currentMenuItem == subMenuItemsLength - 1) {
     currentMenuItem = 0;
@@ -91,8 +145,8 @@ void switchMenuItem() {
   tft.fillRect(0, 2+currentMenuItem*bh, 500, bh, THEME_BG_COLOR);
    
   tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
-  const String npp = String(currentMenuItem) + String(". ");
-  const String nppPrev = String(prevMenuItem) + String(". ");
+  const String npp = String(currentMenuItem+1) + String(". ");
+  const String nppPrev = String(prevMenuItem+1) + String(". ");
   if(useSubmenu){
       if(subMenuItems[currentMenuItem] == MENU_ITEM_EDIT_PWD_RULES) {
         tft.drawString(npp + subMenuItems[currentMenuItem] + " " + currentPwdRule, 0, 2 + currentMenuItem*bh);
@@ -105,7 +159,13 @@ void switchMenuItem() {
       } else {
         tft.drawString(nppPrev + subMenuItems[prevMenuItem], 0, 2 + prevMenuItem*bh);
       }
-  }else {
+  } else if (shorterMenu) {
+    
+    tft.drawString(npp + shorterMenuItems[currentMenuItem], 0, 2 + currentMenuItem*bh);
+    tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
+    tft.drawString(nppPrev + shorterMenuItems[prevMenuItem], 0, 2 + prevMenuItem*bh);
+     
+  } else {
     tft.drawString(npp + menuItems[currentMenuItem], 0, 2 + currentMenuItem*bh);
     tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
     tft.drawString(nppPrev + menuItems[prevMenuItem], 0, 2 + prevMenuItem*bh);
@@ -119,7 +179,6 @@ bool confirmationGranted() {
 }
 void switchConfirmationItem() {
   static int16_t bx, by; static uint16_t bw, bh;
-//  char* pch = strtok(sourceStr, ",");
   bh = tft.fontHeight();
   bx = 0;
   by = 2;
@@ -128,19 +187,20 @@ void switchConfirmationItem() {
   if (currentConfirmationItem == 1) {
     currentConfirmationItem = 0;
     tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
-    tft.drawString("Yes", 0, bh);
+    tft.drawString(LABEL_YES, 0, bh);
     tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
-    tft.drawString("No", 0, 2*bh);
+    tft.drawString(LABEL_NO, 0, 2*bh);
   } else {
     currentConfirmationItem = 1;
     tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
-    tft.drawString("No", 0, 2*bh);
+    tft.drawString(LABEL_NO, 0, 2*bh);
     tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
-    tft.drawString("Yes", 0, bh);
+    tft.drawString(LABEL_YES, 0, bh);
   }
 
 }
-void renderConfirmation() {
+void renderConfirmation(String text) {
+  currentConfirmationItem = 1;
   tft.fillScreen(THEME_BG_COLOR);
   tft.setTextFont(2);
   tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
@@ -150,8 +210,8 @@ void renderConfirmation() {
   bx = 0;
   by = 2;
   tft.setTextDatum(TL_DATUM);
-  tft.drawString("Allow BLE connect", 0, 0);
-  tft.drawString("Yes", 0, bh);
+  tft.drawString(text, 0, 0);
+  tft.drawString(LABEL_YES, 0, bh);
   tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
-  tft.drawString("No", 0, 2*bh);
+  tft.drawString(LABEL_NO, 0, 2*bh);
 }

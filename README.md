@@ -1,16 +1,63 @@
-# PassmMan
+# PassMan
 ## Basic functionlities
-1. Button pressed 1 time - Switch between passwords / Navigating between menu items
-2. Button double-pressed - Insert password currnently visible on screen / Confirm menu item action
-3. Button triple-pressed - Insert login currently visible on the screen
-4. Button pressed 4 times swiftly - insert previous password
+Passman is a free software ecosystem that allows users to create a highly-secure passwords and credentials vault. 
+Core benefits:
+1. Credentials are stored in a dedicated offline environment
+2. Credentials can be easily inserted into any devices that have a USB or USB OTG port (make sure to switch to English locale before inserting text)
+3. Passwords, credit card information, or any confidential notes can be stored on a device
+4. Completely transparent - the code is open-source, can be sef-hosted or modified if needed
+5. No backend, databases, statistics tracking or any data interchange with third-parties - all the data is stored on user's MicroSD card 
+6. Keeps track of 10 recent passwordsfor every entry
+7. Passwords can be easily re-generated on the device
 
-## Burning usb stick
-1. Get a T-dongle S3 (ESP32S3) stick
+To start using this tool it is required to obtain:
+1. A T-dongle S3 stick (ESP32S3)  (more details at [https://github.com/Xinyuan-LilyGO/T-Dongle-S3/blob/main/docs/en/t-dongle-s3/REAMDE.MD])
+2. A MicroSD card (size and speed is not important)
+
+
+### With listed output disabled
+1. Button pressed 1 time - Switch to the next item / Navigating between menu items
+2. Button double-pressed - Insert password currnently visible on the screen / Confirm action
+3. Button triple-pressed - Go back to the previous screen
+4. Button pressed 4 times swiftly - insert previous password
+5. Button long press - toggle menu
+
+
+### Menu functionlity
+1. Enable bluetooth - turn on bluetooth to be able to manage passwords using webpage
+2. Re-generate password - create new password for currently selected item (old pssword is stored and available using 4-times button press)
+3. Dump all - stick will print all passwords and partially hidden servicenames and logins stored on the card (can be used to created printed backups) 
+
+## Advanced security considerations
+To get the most level of security and data-leak protection it is advised to use a passman native client app and enable sandbox env for it (by prohibiting any network connectivity using operating system firewall). This way it is possible to prevent any possible security pitfalls (e.g. malicious browser extensions) 
+
+
+## Upload firmaware using the website
+1. Press and hold button
+2. Plug stick into usb port while holding button pressed
+3. Click Upload Firmware button on the  https://ant777.github.io/passman/ website and follow the instructions
+4. Once upload is completed unplug the stick
+5. Plug stick again (not holding button pressed this time) and click on Connect to PassMan device on the  https://ant777.github.io/passman/ website
+
+
+## Upload firmaware with other tools
+1. Insert stick while holding the button pressed
+2. Visit https://espressif.github.io/esp-launchpad/ click on Connect and select plugged in Stick
+3. Click DIY change Flash Address to 0x0
+4. Select the file from this repo located in `firmware/passman-x.x.x.ino` and click Program and wait until flash is burned
+5. Click Reset Device
+
+## Burning usb stick with Arduino IDE
+1. Get a T-dongle S3 (ESP32S3) stick (more details at [https://github.com/Xinyuan-LilyGO/T-Dongle-S3/blob/main/docs/en/t-dongle-s3/REAMDE.MD])
 2. Open firmware/firmware.ino in Arduino IDE 
+3. Install dependencies more details at [https://github.com/Xinyuan-LilyGO/T-Dongle-S3/blob/main/docs/en/t-dongle-s3/REAMDE.MD#arduino-ide-quick-start]
+    a. TFT_eSPI at version 2.4.78 https://github.com/Bodmer/TFT_eSPI
+    b. OneButton at version 2.0.2 https://github.com/mathertel/OneButton
+    c. FastLED at version 3.5.0 https://github.com/FastLED/FastLED
 3. Adjust Arduino IDE as per image below ![Arduino burner config](firmware-burner-arduino-config.png "Arduino config")
 4. Insert stick while holding the button pressed
 5. Upload firmware.ino to the stick
+6. Unplug the stick and plug it again (without holding button) again to start using device normally
 
 ## Managing passwords
 1. Connect a stick with uploaded firmare to any usb socket
@@ -21,3 +68,4 @@
 6. Select PassMan device from the bluetooth devic list and confirm by clicking on Pair button
 7. On the stick's screen a bluetooth connection confirmation message should appear, confirm by navigating to Yes option and double-press stick's button
 8. Once stick is connected to the page - it is possible to create new items or update and remove the item that is visible on the stick's screen
+

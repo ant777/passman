@@ -27,7 +27,47 @@ void sd_init(void) {
     }
     Serial.println("Init fs success!");
 }
+
       
+String createNewCard(String title, String cname, String number, String cexp, String cvc, String pin) {
+    File root = SD_MMC.open("/");
+    File file = root.openNextFile();
+    int maxIndex = 0;
+    while (file) {
+        if (!file.isDirectory()) {
+          const String name = file.name();
+          if(name.indexOf('.card') != -1 && name.toInt() >= maxIndex) {
+            maxIndex = name.toInt()+1;
+          }
+        }
+        file = root.openNextFile();
+    }
+
+    String newName = '/' + String(maxIndex) + String(".card");
+    String initialContents = title + "\n" + cname + "\n" + number + "\n" + cexp + "\n" + cvc + "\n" + pin ;
+    writeFile(SD_MMC, newName.c_str(), initialContents.c_str());
+    return newName;
+}
+String createNewNote(String title, String contents) {
+
+    File root = SD_MMC.open("/");
+    File file = root.openNextFile();
+    int maxIndex = 0;
+    while (file) {
+        if (!file.isDirectory()) {
+          const String name = file.name();
+          if(name.indexOf('.note') != -1 && name.toInt() >= maxIndex) {
+            maxIndex = name.toInt()+1;
+          }
+        }
+        file = root.openNextFile();
+    }
+
+    String newName = '/' + String(maxIndex) + String(".note");
+    String initialContents = title + "\n" + contents + String("\n");
+    writeFile(SD_MMC, newName.c_str(), initialContents.c_str());
+    return newName;
+}  
 String createNewPwd(String serviceName, String login, String pwdRule, String suggestedPwd) {
     File root = SD_MMC.open("/");
     String pwd = suggestedPwd;
@@ -58,7 +98,7 @@ String createNewPwd(String serviceName, String login, String pwdRule, String sug
     }
 
     String newName = '/' + String(maxIndex) + String(".pwd");
-    String initialContents = padStringRight(serviceName) + "\n" + padStringRight(login) + "\n" + padStringRight(pwdRule) + "\n" + padStringRight(pwd);
+    String initialContents = padStringRight(serviceName) + "\n" + padStringRight(login) + "\n" + padStringRight(pwdRule) + "\n" + padStringRight(pwd) + String("\n");
     writeFile(SD_MMC, newName.c_str(), initialContents.c_str());
     return newName;
 }  
@@ -69,11 +109,27 @@ void addPwd(fs::FS &fs, const char * path, String newVal) {
   file.close();
 }
 
+void updateCardData(fs::FS &fs, const char * path, String title, String cname, String number, String cexp, String cvc, String pin) {
+  const String prevContents = readFile(fs, path);
+  File file = fs.open(path, FILE_WRITE);
+  file.seek(0);
+  file.print(title + "\n" + cname + "\n" + number + "\n" + cexp + "\n" + cvc + "\n" + pin );
+
+  file.close();
+}
+void updateNoteData(fs::FS &fs, const char * path, String title, String contents) {
+  const String prevContents = readFile(fs, path);
+  File file = fs.open(path, FILE_WRITE);
+  file.seek(0);
+  file.print(title + "\n" + contents);
+
+  file.close();
+}
 void updatePwdData(fs::FS &fs, const char * path, String serviceName, String login, String pwdRule) {
   const String prevContents = readFile(fs, path);
   File file = fs.open(path, FILE_WRITE);
   file.seek(0);
-  file.print(padStringRight(serviceName) + "\n" + padStringRight(login) + "\n" + padStringRight(pwdRule) + prevContents.substring(92));
+  file.print(padStringRight(serviceName) + "\n" + padStringRight(login) + "\n" + padStringRight(pwdRule) + "\n" + prevContents.substring(3*MAX_STRING_SIZE + 3));
 
   file.close();
 }
@@ -86,14 +142,14 @@ void updatePwd(fs::FS &fs, const char * path, String newVal, String type) {
   File file = fs.open(path, FILE_WRITE);
   file.seek(0);
   if (type == MENU_ITEM_EDIT_SERVICE) {
-    file.print(padStringRight(newVal) + prevContents.substring(30));
+    file.print(padStringRight(newVal) + prevContents.substring(MAX_STRING_SIZE));
   } else if (type == MENU_ITEM_EDIT_LOGIN) {
-    file.print(prevContents.substring(0, 31) + padStringRight(newVal) + prevContents.substring(60));
+    file.print(prevContents.substring(0, MAX_STRING_SIZE + 1) + padStringRight(newVal) + prevContents.substring(2*MAX_STRING_SIZE));
 //    Keyboard.print(prevContents.substring(0, 31) + padStringRight(newVal) + prevContents.substring(60));
   } else if (type == MENU_ITEM_EDIT_PWD_RULES) {
-    file.print(prevContents.substring(0, 62) + padStringRight(newVal) + prevContents.substring(92));
+    file.print(prevContents.substring(0, MAX_STRING_SIZE * 2 + 2) + padStringRight(newVal) + prevContents.substring(MAX_STRING_SIZE*3+2));
   } else if(type == MENU_ITEM_EDIT_PWD_REGENERATE){
-    file.print(prevContents.substring(0, prevContents.length()-31) + padStringRight(newVal));
+    file.print(prevContents.substring(0, prevContents.length() - MAX_STRING_SIZE - 1) + padStringRight(newVal));
   }
 
 
@@ -109,11 +165,20 @@ String  readNextFile(File &root) {
   return "!";
 }
 
+void renameFile(fs::FS &fs, const char * path1, const char * path2){
+    Serial.printf("Renaming file %s to %s\n", path1, path2);
+    if (fs.rename(path1, path2)) {
+        Serial.println("File renamed");
+    } else {
+        Serial.println("Rename failed");
+    }
+}
+
 String readFile(fs::FS &fs, const char * path)
 {
     Serial.printf("Reading file: %s\n", path);
 
-    File file = SD_MMC.open(path);
+    File file = fs.open(path);
     if (!file) {
         Serial.println("Failed to open file for reading");
         return "!";
@@ -134,6 +199,11 @@ String readFile(fs::FS &fs, const char * path)
   return contentVar;
 }
 
+String readMeta(fs::FS &fs) {
+  const String metaFileName = "pwdman.meta";
+  String dataF = readFile(SD_MMC, ('/' + metaFileName).c_str());
+    return dataF;
+}
 void writeFile(fs::FS &fs, const char * path, const char * message)
 {
     Serial.printf("Writing file: %s\n", path);
@@ -148,6 +218,10 @@ void writeFile(fs::FS &fs, const char * path, const char * message)
     } else {
         Serial.println("Write failed");
     }
+}
+void writeMeta(fs::FS &fs,  const char * message) {
+  String metaFileName = "/pwdman.meta";
+  writeFile(fs, metaFileName.c_str(), message);
 }
 
 

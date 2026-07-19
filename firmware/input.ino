@@ -1,22 +1,10 @@
 #include "general_config.h"
 
-static uint32_t last = 0;
-int currentSymbol = -1;
-int nextSymbol = 0;
 String lowercaseLetters = "abcdefghijklmnopqrstuvwxyz";
 String uppercaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 String numbers = "0123456789";
 String symbols = "_-@.!$&?";
 
-char inputResult[MAX_STRING_SIZE+1];
-int editingPos = 0;
-
-String editTarget;
-
-String inputSympbols = lowercaseLetters + numbers + symbols;
-const int inputSympbolsLength = inputSympbols.length();
-
-//a-zA-Z0-9!@#$_-||8-10
 String getPossibleString(String pwdRule) {
   char contents[MAX_STRING_SIZE];
   strcpy(contents, pwdRule.c_str());
@@ -40,6 +28,10 @@ String getPossibleString(String pwdRule) {
       resPossibleStrings += numbers;
       parsedPwdRule.replace("0-9", "");
     }
+    if (parsedPwdRule.indexOf("SYM") != -1) {
+      resPossibleStrings += symbols;
+      parsedPwdRule.replace("SYM", "");
+    }
     return resPossibleStrings + parsedPwdRule;
   }
 }
@@ -61,7 +53,7 @@ unsigned int getPasswordLength(String pwdRule) {
   
   String parsedPwdRuleMinLength = String(strtok(contents, "-"));
   String parsedPwdRuleMaxLength = String(strtok(NULL, "-"));
-  Keyboard.print(parsedPwdRuleMinLength);
+//  Keyboard.print(parsedPwdRuleMinLength);
   if (parsedPwdRuleMinLength.toInt()) {
     minL = parsedPwdRuleMinLength.toInt();
   }
@@ -85,85 +77,11 @@ String generateRandomString(String pwdRule) {
     int r = random(0, possibleLength);
     randString += possible[r];
   }
+  if(pwdRule.indexOf("SYM") != -1) {
+    int r = random(0, symbols.length());
+    char randSym = symbols[r] ;
+    int ind = random(0, randString.length());
+    randString[ind] = randSym;
+  }
   return randString;
-}
-
-
-void setEditTarget(String newTarget) {
-  editTarget = newTarget;
-}
-String getEditTarget(void) {
-  return editTarget;
-}
-String getInputResult(void) {
-  return String(inputResult);
-}
-
-void renderInput() {
-  tft.fillScreen(THEME_BG_COLOR);
-  tft.setTextFont(2);
-}
-
-void addCurrentLetterToInputResult() {
-  inputResult[editingPos] = inputSympbols.charAt(currentSymbol);
-  if (editingPos < MAX_STRING_SIZE - 1) { 
-    editingPos+=1;
-  }
-  currentSymbol = -1;
-  nextSymbol = 0;
-  redrawResult();
-}
-
-void editPrevLetterOfInputResult() {
-  if (editingPos > 0) {
-    
-    editingPos-=1;
-  }
-  inputResult[editingPos] = ' ';
-  currentSymbol = -1;
-  nextSymbol = 0;
-  redrawResult();
-}
-
-void tickInput() {
-  
-    if( millis() - last > INPUT_AUTO_SWITCH_TIMEOUT ) {
-      last = millis();
-      if (currentSymbol + 1 >= inputSympbolsLength) {
-        currentSymbol = 0;
-      } else {
-        currentSymbol += 1;
-      }
-      if (nextSymbol + 1 >= inputSympbolsLength) {
-        nextSymbol = 0;
-      } else {
-        nextSymbol += 1;
-      }
-      redrawInput();
-    }
-}
-
-
-void redrawResult() {
-  static uint16_t bw, bh;
-  tft.setTextFont(2);
-  tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
-  bh = tft.fontHeight();
-  bw = tft.textWidth(String(inputResult));
-  tft.fillRect(0, 0, 500, bh, THEME_BG_COLOR);
-  tft.drawString(String(inputResult), 0, 0);
-}
-
-
-void redrawInput() {
-  static uint16_t bw, bh;
-  tft.setTextFont(2);
-  bh = tft.fontHeight();
-  tft.fillRect(0, bh, 500, 500, THEME_BG_COLOR);
-  tft.setTextFont(4);
-  tft.setTextColor(THEME_HIGHLIGHT_COLOR, THEME_HIGHLIGHT_COLOR);
-  tft.drawString(String(inputSympbols.charAt(currentSymbol)), 5, bh);
-  tft.setTextColor(THEME_FONT_COLOR, THEME_FONT_COLOR);
-  bw = tft.textWidth(String(inputSympbols.charAt(currentSymbol)));
-  tft.drawString(String(inputSympbols.charAt(nextSymbol)), bw+10, bh);
 }

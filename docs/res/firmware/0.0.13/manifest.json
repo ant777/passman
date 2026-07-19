@@ -1,0 +1,16 @@
+{
+  "name": "PassMan",
+  "version": "0.0.13",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "./passman.bin",
+          "offset": "0x0"
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,7 @@
 config.js
 node_modules
 .parcel-cache
+passman-app-linux-x64
+
+output/*
+!output/*.exe
