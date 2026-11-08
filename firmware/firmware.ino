@@ -32,7 +32,10 @@
 #include <sstream> // std::istringstream
 #include <vector>
 #include <cctype> // std::isdigit
+#include <Preferences.h>
 
+Preferences preferences;
+int restartCount = 0;
 
 CRGB leds[1];
 CRGB colors[4] = {CRGB::Red, CRGB::Green, CRGB::Blue, CRGB::Black};
@@ -72,10 +75,9 @@ uint16_t THEME_BG_COLOR = THEME_DARK_BG_COLOR;
 uint16_t THEME_HIGHLIGHT_COLOR = THEME_DARK_HIGHLIGHT_COLOR;
 uint16_t THEME_FONT_COLOR = THEME_DARK_FONT_COLOR;
 uint16_t THEME_TITLE_COLOR = THEME_DARK_TITLE_COLOR;
-
-
-const String LOCALIZED[1][5] = {
-  {"Yes", "No", "Passwords", "Credit Cards", "Notes"}
+ 
+const String LOCALIZED[1][6] = {
+  {"Yes", "No", "Passwords", "Credit Cards", "Notes", "Recent"}
 };
 
 String LABEL_YES = "";
@@ -83,6 +85,7 @@ String LABEL_NO = "";
 String LABEL_PASSWORDS = "";
 String LABEL_CREDIT_CARDS = "";
 String LABEL_NOTES = "";
+String LABEL_RECENTS = "";
 
 Menu sectionsMenu(tft);
 void loadLocale(int localeInd = 0) {
@@ -91,6 +94,7 @@ void loadLocale(int localeInd = 0) {
   LABEL_PASSWORDS = LOCALIZED[localeInd][2];
   LABEL_CREDIT_CARDS = LOCALIZED[localeInd][3];
   LABEL_NOTES = LOCALIZED[localeInd][4];
+  LABEL_RECENTS = LOCALIZED[localeInd][5];
 }
 
 int prevScreenType = 0; 
@@ -121,9 +125,27 @@ int fileType = FILE_TYPE_PWD; // 0 - pwd, 1 - cards, 2 - notes
 String sortingPwdConf = "";
 String sortingNoteConf = "";
 String sortingCardConf = "";
+bool showRecents = false;
 
 std::vector<std::string> getFilenames(String specificType = "") {
   int type = fileType;
+  if(showRecents) {
+        // Open NVS namespace "my-app" in read-write mode (false)
+        preferences.begin("passman", false);
+      
+        // Read the stored value for "counter", default to 0 if not yet set
+        String str = preferences.getString("recents", "");
+        char contents[1024];
+        strcpy(contents, str.c_str());
+        char* token = strtok (contents, ",");
+        std::vector<std::string> recentnames;
+        while (token != NULL) {
+            recentnames.push_back(std::string(token)); 
+            token = strtok(NULL, ","); 
+        }
+        preferences.end();
+    return recentnames;
+  }
   if(specificType == "pwd") {
     type = FILE_TYPE_PWD;
   } else if(specificType == "note") {
@@ -190,6 +212,8 @@ String enqueueSendList = "";
 String enqueueRenameType = "";
 int enqueueRenameFrom = -1;
 int enqueueRenameTo = -1;
+
+bool isDemo = false;
 
 File getRoot() {
   return SD_MMC.open("/");
@@ -677,7 +701,7 @@ void handleLongClick() {
 
 void handleClick() {
   if(screenType == 0) {
-    size_t length = getFilenames().size();
+    size_t length = isDemo ? 3 : getFilenames().size();
     if (passListEnabled && passListVisible && passListActive == false) {
       int nextInd = currentInd - currentInd % PASS_LIST_SIZE + PASS_LIST_SIZE;
       if (nextInd < length) {
@@ -685,7 +709,7 @@ void handleClick() {
       } else {
         currentInd = 0;
       }
-    } else if (passListEnabled) {
+    } else if (passListEnabled && currentInd < length - 1) {
       passListActive = true;
       passListVisible = true;
       if (currentInd % PASS_LIST_SIZE == PASS_LIST_SIZE-1 || currentInd +1 >= getFilenames().size()) {
@@ -746,7 +770,7 @@ void handleMultiClick() {
   }
   if (clicks == 4) {
     if (screenType == 0) {
-      Keyboard.print(currentPrevPwd);
+      Keyboard.print(currentLogin);
     }
   }
 }
@@ -762,11 +786,24 @@ void handleDoubleClick() {
       passListActive = false;
       renderPass();
     }else{
+      // Open NVS namespace "my-app" in read-write mode (false)
+      preferences.begin("passman", false);
+    
+      String recents = preferences.getString("recents", "");
+
+      String newRecents = recents;
+      newRecents.replace("," + getCurrentFileName(), "");
+      newRecents.replace(getCurrentFileName(), "");
+    
+      preferences.putString("recents", newRecents ? getCurrentFileName() + ',' + newRecents : getCurrentFileName());
+    
+      // Close the NVS handle
+      preferences.end();
+      //  Keyboard.print(restartCount);
       Keyboard.print(currentPwd);
       if(autopressEnter) {
         Keyboard.write(KEY_RETURN);
       }
-        
     }
       return;
     //  Serial.println("Double Clicked!");
@@ -774,7 +811,14 @@ void handleDoubleClick() {
     //  digitalWrite(LED_BUILTIN, LOW);
   } else if (screenType == -1) {
     screenType = 0;
-    fileType = sectionsMenu.getCurrentInd();
+    showRecents = false;
+    if(sectionsMenu.getCurrentInd() == 0) {
+      fileType = 0;
+    }else if (sectionsMenu.getCurrentInd() == 1) {
+      showRecents = true;
+    }else if (sectionsMenu.getCurrentInd() > 1) {
+      fileType = sectionsMenu.getCurrentInd() - 1;
+    }
     renderPass();
   } else if(screenType == 1) {
 
@@ -977,7 +1021,6 @@ void loadMetaData() {
     THEME_TITLE_COLOR = tft.color565(atoi(titleColorR), atoi(titleColorG), atoi(titleColorB));
   }
 }
-
 void setup() {
   Serial.begin(115200);
   randomSeed(analogRead(0));
@@ -990,6 +1033,8 @@ void setup() {
 
   sectionsMenu.setColor(THEME_FONT_COLOR, THEME_BG_COLOR);
   
+
+
 
   digitalWrite(TFT_LEDA_PIN, 0);
 
@@ -1010,7 +1055,7 @@ void setup() {
     setupBLEServer();
   }
 
-  String labels[3] = {LABEL_PASSWORDS, LABEL_CREDIT_CARDS, LABEL_NOTES};
+  String labels[4] = {LABEL_PASSWORDS, LABEL_RECENTS, LABEL_CREDIT_CARDS, LABEL_NOTES};
   sectionsMenu.setLabels(labels);
   sectionsMenu.render();
   button.attachLongPressStop(handleLongClick);
@@ -1085,10 +1130,11 @@ void enqueueUpdateNote(String fileName, String title, String contents) {
   enqueueUpdateNoteFlag = fileName;
   
 }
-void enqueueUpdatePwd(String fileName, String nServiceName, String nLogin, String nPwdRule) {
+void enqueueUpdatePwd(String fileName, String nServiceName, String nLogin, String nPwdRule, String nPwd = "") {
   newServiceName = nServiceName;
   newLogin = nLogin;
   newPwdRule = nPwdRule;
+  newPwd = nPwd;
   enqueueUpdate = fileName;
 }
 
@@ -1283,6 +1329,10 @@ void loop() {
     newServiceName = "";
     newLogin = "";
     newPwdRule = "";
+    if (newPwd != "") {
+      addPwd(SD_MMC, fName, newPwd);
+      newPwd = "";
+    }
   }
   delay(5);
 }

@@ -19,7 +19,7 @@ class Menu {
     void open();
     void back();
     int getCurrentInd();
-    void setLabels(String labels[3]);
+    void setLabels(String labels[4]);
     void setColor(uint16_t fontColor, uint16_t bgColor);
   private:
     TFT_eSPI& tft;

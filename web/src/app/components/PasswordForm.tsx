@@ -43,10 +43,10 @@ export function PasswordForm({ onSave, editEntry, onCancelEdit, defaultType = 'p
   const [password, setPassword] = useState(editEntry?.password ?? "");
   const [minLength, setMinLength] = useState(editEntry?.ruleLimitsMin || 12);
   const [maxLength, setMaxLength] = useState(editEntry?.ruleLimitsMax || 20);
-  const [uppercase, setUppercase] = useState(editEntry?.ruleWhitelist?.includes('A-Z') || false);
-  const [lowercase, setLowercase] = useState(editEntry?.ruleWhitelist?.includes('a-z') || false);
-  const [numbers, setNumbers] = useState(editEntry?.ruleWhitelist?.includes('0-9') || false);
-  const [symbols, setSymbols] = useState(editEntry?.ruleWhitelist?.includes('SYM') || false);
+  const [uppercase, setUppercase] = useState(editEntry?.ruleWhitelist?.includes('A-Z') || !editEntry);
+  const [lowercase, setLowercase] = useState(editEntry?.ruleWhitelist?.includes('a-z') || !editEntry);
+  const [numbers, setNumbers] = useState(editEntry?.ruleWhitelist?.includes('0-9') || !editEntry);
+  const [symbols, setSymbols] = useState(editEntry?.ruleWhitelist?.includes('SYM') || !editEntry);
 
   const [title, setTitle] = useState(editEntry?.title ?? "");
   const [contents, setContents] = useState(editEntry?.contents ?? "");
@@ -344,10 +344,30 @@ export function PasswordForm({ onSave, editEntry, onCancelEdit, defaultType = 'p
               />
             </div>
             {[
-              { label: "A-Z", checked: uppercase, set: setUppercase },
-              { label: "a-z", checked: lowercase, set: setLowercase },
-              { label: "0-9", checked: numbers, set: setNumbers },
-              { label: "!@#", checked: symbols, set: setSymbols },
+              { label: "A-Z", checked: uppercase, set: (val) => {
+                if(!val && !lowercase && !numbers && !symbols){
+                  return;
+                }
+                setUppercase(val);
+              } },
+              { label: "a-z", checked: lowercase, set: (val) => {
+                if(!val && !uppercase && !numbers && !symbols){
+                  return;
+                }
+                setLowercase(val);
+              }  },
+              { label: "0-9", checked: numbers, set: (val) => {
+                if(!val && !lowercase && !uppercase && !symbols){
+                  return;
+                }
+                setNumbers(val);
+              }  },
+              { label: "!@#", checked: symbols, set: (val) => {
+                if(!val && !lowercase && !numbers && !uppercase){
+                  return;
+                }
+                setSymbols(val);
+              }  },
             ].map((opt) => (
               <label
                 key={opt.label}

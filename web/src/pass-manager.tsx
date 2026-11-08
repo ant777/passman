@@ -197,7 +197,7 @@ export class PassManagerBLE {
                     }
                     rule += '||'+ pwdData.ruleLimitsMin +'-'+ pwdData.ruleLimitsMax;
                 }
-                data = new TextEncoder().encode('update\n' +pwdData.type + '\n' + pwdData.id + '\n' + pwdData.service + '\n' + pwdData.username + '\n' + rule);
+                data = new TextEncoder().encode('update\n' +pwdData.type + '\n' + pwdData.id + '\n' + pwdData.service + '\n' + pwdData.username + '\n' + rule + (pwdData.password ? '\n' + pwdData.password : ''));
             }
                 characteristic.writeValueWithoutResponse(data);
         }, 2000);

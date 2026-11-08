@@ -182,7 +182,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
               if (parsedService && parsedInstruction == "create") {
                 enqueueNewPwd(parsedService, parsedLogin, parsedPwdRule, parsedPwd);
               } else if(parsedService && parsedInstruction == "update"){
-                enqueueUpdatePwd(parsedFilename, parsedService, parsedLogin, parsedPwdRule);
+                enqueueUpdatePwd(parsedFilename, parsedService, parsedLogin, parsedPwdRule, parsedPwd);
               }
             }
           }

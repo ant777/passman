@@ -1,4 +1,4 @@
-export const version = "0.0.15";
+export const version = "0.0.16";
 
 export const maintainableVersions = [
 "0.0.10",
@@ -6,7 +6,8 @@ export const maintainableVersions = [
 "0.0.12",
 "0.0.13",
 "0.0.14",
-"0.0.15",];
+"0.0.15",
+"0.0.16",];
 
 export const maintainableFirmwareVersions = [
 '0.0.3',
