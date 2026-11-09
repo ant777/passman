@@ -39,6 +39,9 @@ export function SettingsForm({ onSave, meta, onCancelEdit }: SettingsFormProps) 
     if (key === 'PASS_LIST_ENABLED') {
       value = true;
     }
+    if (key === 'LOCALE_RU') {
+      value = true;
+    }
     if (key === 'CONNECTION_CONFIRMATION_DISABLED') {
       value = true;
     }
@@ -74,6 +77,7 @@ export function SettingsForm({ onSave, meta, onCancelEdit }: SettingsFormProps) 
   const [connectionConfirmation, setConnectionConfirmation] = useState(parsed.CONNECTION_CONFIRMATION_DISABLED !== undefined ? !parsed.CONNECTION_CONFIRMATION_DISABLED : true);
   const [passListOutput, setPassListOutput] = useState(!!parsed.PASS_LIST_ENABLED);
   const [theme, setTheme] = useState(parsed.THEME_CUSTOM ? 'custom' : 'default');
+  const [locale, setLocale] = useState(parsed.LOCALE_RU ? 'ru' : 'en');
 
   const [bgR, setBgR] = useState(parsed.THEME_CUSTOM?.bgR || 128);
   const [bgG, setBgG] = useState(parsed.THEME_CUSTOM?.bgG || 128);
@@ -241,6 +245,20 @@ export function SettingsForm({ onSave, meta, onCancelEdit }: SettingsFormProps) 
                 <SelectItem value="custom">Custom</SelectItem>
             </SelectContent>
           </Select>
+      <div
+        className="flex flex-col items-start gap-2 cursor-pointer select-none  mb-6">
+          Locale
+          <Select onValueChange={setLocale} defaultValue={locale}>
+            <SelectTrigger
+      style={{ backgroundColor: "var(--pm-bg-page)", color: "var(--pm-text)" }} className="w-full max-w-48">
+              <SelectValue placeholder="Select a locale" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="en">En</SelectItem>
+                <SelectItem value="ru">Ru</SelectItem>
+            </SelectContent>
+          </Select>
+      </div>
           {theme === 'custom' && <><div>
             <h5>Background color</h5>
             <div className="flex gap-2 items-center"> 
@@ -309,6 +327,9 @@ export function SettingsForm({ onSave, meta, onCancelEdit }: SettingsFormProps) 
           let result = '';
           if(theme === 'custom') {
             result += `THEME_CUSTOM:${bgR||0},${bgG||0},${bgB||0},${fontR||0},${fontG||0},${fontB||0},${hilitR||0},${hilitG||0},${hilitB||0},${titleR||0},${titleG||0},${titleB||0}\n`;
+          }
+          if (locale === "ru") {
+            result += 'LOCALE_RU\n';
           }
           if (passListOutput) {
             result += 'PASS_LIST_ENABLED\n';

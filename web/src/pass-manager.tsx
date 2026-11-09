@@ -129,6 +129,7 @@ export class PassManagerBLE {
                             temp=[];
                         }
                     } else if(parsed[0].trim() === 'meta') {
+                        console.warn(parsed);
                         metaCb(value.trim());
                     } else {
 

@@ -76,7 +76,7 @@ const unsigned char epd_bitmap_notepad_text [] PROGMEM = {
 //    
 //      // Element 2: line
 //      tft.drawLine(x_offset + 2, y_offset + 12, x_offset + 32, y_offset + 12, TFT_WHITE);
-      tft.drawBitmap(x_offset + 2, y_offset-7 , epd_bitmap_credit_card, 28, 28, TFT_WHITE);
+      tft.drawBitmap(x_offset + 5, y_offset-7 , epd_bitmap_credit_card, 28, 28, TFT_WHITE);
     
     }
     void drawSVGRecents(TFT_eSPI &tft, int16_t x_offset, int16_t y_offset) {
@@ -85,7 +85,7 @@ const unsigned char epd_bitmap_notepad_text [] PROGMEM = {
 //    
 //      // Element 2: line
 //      tft.drawLine(x_offset + 2, y_offset + 12, x_offset + 32, y_offset + 12, TFT_WHITE);
-      tft.drawBitmap(x_offset + 2, y_offset-9 , epd_bitmap_recent_svgrepo_com, 40, 40, TFT_WHITE);
+      tft.drawBitmap(x_offset + 3, y_offset-9 , epd_bitmap_recent_svgrepo_com, 40, 40, TFT_WHITE);
     
     }
     
@@ -117,7 +117,7 @@ const unsigned char epd_bitmap_notepad_text [] PROGMEM = {
 //      // Path drawing (simplified)
 //      tft.drawLine(x_offset + 8, y_offset + 18, x_offset + 21, y_offset + 18, TFT_WHITE);
     
-      tft.drawBitmap(x_offset + 2, y_offset-9 , epd_bitmap_notepad_text, 28, 28, TFT_WHITE);
+      tft.drawBitmap(x_offset + 10, y_offset-9 , epd_bitmap_notepad_text, 28, 28, TFT_WHITE);
     }
 
     

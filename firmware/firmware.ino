@@ -180,6 +180,8 @@ bool passListVisible = true;
 bool passListActive = false;
 bool enqueuePwdGenerate = false;
 
+String locale = "en";
+
 bool hasUpdatesService = false;
 bool hasUpdatesLogin = false;
 bool hasUpdatesPwdRule = false;
@@ -904,6 +906,9 @@ String getCurrentMetaString() {
 String getCurrentDataString() {
   return currentService + "\n" + currentLogin + "\n" + currentPwdRule;
 }
+String getLocale() {
+  return locale;
+}
 
 String getCommonDataString(String type, int offset = 0) {
 
@@ -956,6 +961,9 @@ void loadMetaData() {
   }
   if (dataF.indexOf("CONNECTION_CONFIRMATION_DISABLED") != -1) {
     connectionConfirmation = false; 
+  }
+  if (dataF.indexOf("LOCALE_RU") != -1) {
+    locale = "ru"; 
   }
 //  if(dataF.indexOf("SORTING_PWD") != -1) {
 //    int sortingStart = dataF.indexOf("SORTING_PWD") + 11;
@@ -1044,13 +1052,13 @@ void setup() {
 
   sd_init();
 
-  
   scanDir();
   sortFiles();
   root = getRoot();
 
   loadMetaData();
   loadLocale(0);
+  sectionsMenu.setLocale(locale);
   if (autostartBluetooth) {
     setupBLEServer();
   }

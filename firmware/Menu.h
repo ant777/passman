@@ -20,13 +20,15 @@ class Menu {
     void back();
     int getCurrentInd();
     void setLabels(String labels[4]);
+    void setLocale(String locale);
     void setColor(uint16_t fontColor, uint16_t bgColor);
   private:
     TFT_eSPI& tft;
     uint16_t fontColor;
     uint16_t bgColor;
     int currentInd = 0;
-    String labels[3];
+    String labels[4];
+    String locale;
 };
 
 #endif
