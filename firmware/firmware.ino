@@ -127,9 +127,9 @@ String sortingNoteConf = "";
 String sortingCardConf = "";
 bool showRecents = false;
 
-std::vector<std::string> getFilenames(String specificType = "") {
+std::vector<std::string> getFilenames(String specificType = "", bool forceType = false) {
   int type = fileType;
-  if(showRecents) {
+  if(showRecents && !forceType) {
         // Open NVS namespace "my-app" in read-write mode (false)
         preferences.begin("passman", false);
       
@@ -916,11 +916,11 @@ String getCommonDataString(String type, int offset = 0) {
   String postfix = "\n";
   
   for (std::size_t i = offset*5; i < offset*5 + 5; i++) {
-    if (i < getFilenames(type).size()) {
-      std::string item = getFilenames(type)[i];
+    if (i < getFilenames(type, true).size()) {
+      std::string item = getFilenames(type, true)[i];
       const String fName1 = '/' + String(item.c_str());
       String readValue = readFile(SD_MMC, fName1.c_str());
-      if (i == getFilenames(type).size() - 1) {
+      if (i == getFilenames(type, true).size() - 1) {
         postfix += "endoflist";
       }
       if(type == "note") {
@@ -935,7 +935,7 @@ String getCommonDataString(String type, int offset = 0) {
       }
     }
   }
-  if (0 == getFilenames(type).size()) {
+  if (0 == getFilenames(type, true).size()) {
     result += "endoflist";
   }
   return result;
