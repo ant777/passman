@@ -53,7 +53,6 @@ unsigned int getPasswordLength(String pwdRule) {
   
   String parsedPwdRuleMinLength = String(strtok(contents, "-"));
   String parsedPwdRuleMaxLength = String(strtok(NULL, "-"));
-//  Keyboard.print(parsedPwdRuleMinLength);
   if (parsedPwdRuleMinLength.toInt()) {
     minL = parsedPwdRuleMinLength.toInt();
   }

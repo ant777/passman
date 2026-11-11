@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { RefreshCw, Plus, Save, X } from "lucide-react";
 import { PasswordEntry } from "../App";
 import * as ToggleGroup from "@radix-ui/react-toggle-group";
@@ -58,6 +58,9 @@ export function PasswordForm({ onSave, editEntry, onCancelEdit, defaultType = 'p
   const [pin, setPIN] = useState(editEntry?.pin ?? "");
 
 
+  useEffect(() => {
+    setContents(editEntry.contents);
+  }, [editEntry]);
   const handleGenerate = () => {
     const actualMin = Math.max(4, Math.min(minLength, maxLength));
     const actualMax = Math.max(actualMin, maxLength);

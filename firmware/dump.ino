@@ -12,7 +12,7 @@ String getSecureValue(String value) {
 }
 
 void dumpItem(String service, String login, String pwd) {
-  Keyboard.print(getSecureValue(service) + "\n" + getSecureValue(login) + "\n" + pwd);
+  keyboardPrint(getSecureValue(service) + "\n" + getSecureValue(login) + "\n" + pwd);
 }
 
 void dumpAll(fs::FS &fs){
@@ -36,21 +36,14 @@ void dumpAll(fs::FS &fs){
 //                listDir(fs, file.path(), levels - 1);
 //            }
         } else {
-          
-  String fileName = String("/") + file.name();
-if(fileName.indexOf(String(".pwd")) != -1) {
-  const char* fName = fileName.c_str();
-  String readValue = readFile(SD_MMC,  fName);
-//  Keyboard.println(readValue);
-          parsePwdFile(readValue, false);
-//  Keyboard.print(result[0]);
-          dumpItem(parsedResult[0], parsedResult[1], parsedResult[3]);
-          Keyboard.print(String("\n-----------\n") );
-}
-//            Serial.print("  FILE: ");
-//            Keyboard.print(file.name());
-//            Serial.print("  SIZE: ");
-//            Keyboard.println(file.size());
+          String fileName = String("/") + file.name();
+          if (fileName.indexOf(String(".pwd")) != -1) {
+            const char* fName = fileName.c_str();
+            String readValue = readFile(SD_MMC,  fName);
+            parsePwdFile(readValue, false);
+            dumpItem(parsedResult[0], parsedResult[1], parsedResult[3]);
+            keyboardPrint(String("\n-----------\n") );
+          }
         }
         file = root.openNextFile();
     }

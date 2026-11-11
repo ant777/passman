@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PasswordForm } from "./components/PasswordForm";
 import { PasswordList } from "./components/PasswordList";
 import { ThemeProvider, useTheme } from "./components/ThemeProvider";
@@ -39,7 +39,6 @@ const toggleGroupItemClasses =
 	"flex  w-1/3 py-2 items-center justify-center leading-4 text-mauve11 first:rounded-l last:rounded-r hover:bg-violet3 focus:z-10 focus:outline-none data-[state=on]:bg-violet6 data-[state=on]:bg-border pointer";
 
 const passManagerBLE = new PassManagerBLE();
-
 
 function PasswordManager() {
   const { theme, toggleTheme } = useTheme();
@@ -94,8 +93,18 @@ function PasswordManager() {
   };
 
   const handleEdit = (entry: PasswordEntry|NoteEntry) => {
-    setEditEntry(entry);
+    if (entry.id.includes('note')) {
+      setEditEntry(entry);
+      passManagerBLE.requestNote(entry.id);
+    }else{ 
+      setEditEntry(entry);
+    }
   };
+
+passManagerBLE.noteCb = useCallback((note) => {
+  console.warn(note)
+    setEditEntry({...editEntry, contents: editEntry.contents + note})
+  }, [editEntry]) ;
 
   const handleCancelEdit = () => {
     setEditEntry(null);

@@ -1,3 +1,4 @@
+
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -24,6 +25,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
         Serial.println("Device Disconnected");
         pServer->startAdvertising(); // Restart advertising
     }
+
 };
 
 void allowConnection() {
@@ -48,11 +50,26 @@ void fetchData(String type) {
 
 };
 
+void fetchDataNote(String dataStr) {
+  int chunkIndex = 0;
+  while (dataStr.length() > chunkIndex) {
+    pCharacteristic->setValue(String("note\n" + dataStr.substring(chunkIndex, chunkIndex + 100)).c_str());
+    chunkIndex += 100;
+    pCharacteristic->notify();
+  }
+
+};
+
 void sendMeta() {
   
             String dataStr = getCurrentMetaString();
             pCharacteristic->setValue(String("meta\n" + dataStr).c_str());
             pCharacteristic->notify();
+}
+void reportReady() {
+  
+              pCharacteristic->setValue(String("ready").c_str());
+              pCharacteristic->notify();
 }
 void updateCurrentStateBle() {
   if(!deviceConnected) {
@@ -78,6 +95,10 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
           if (value == "requestlist_pwd" || value == "requestlist_card" || value == "requestlist_note") {
 //            fetchData(value.replace(0, 12,"").c_str());
             setEnqueueRequestList(value.replace(0, 12,"").c_str());
+            return;
+          }
+          if (value.find("requestnote") == 0) {
+            setEnqueueRequestNote(value.replace(0, 12,"").c_str());
             return;
           }
           if (value == "request") {
@@ -126,6 +147,20 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
               int parsedFrom = std::stoi(pch1);
               setEnqueueRename(parsedInstruction, parsedFrom, parsedTo);
             return;
+          }
+          if (value.find("partupdate") == 0) {
+            char *rest = NULL;
+            char contents[1024];
+            strcpy(contents, value.c_str());
+            char* pch = strtok_r(contents, "\n", &rest);
+            String parsedInstruction = String(pch);
+            pch = strtok_r(NULL, "\n", &rest);
+            String parsedType = String(pch);
+            if (parsedType == "note") {
+              pch = strtok_r(NULL, "\n", &rest);
+              String parsedFilename = String(pch);
+              enqueuePartUpdateNote(parsedFilename.c_str(), String(rest));
+            }
           }
           if (value.find("create") == 0 || value.find("update") == 0) {
             

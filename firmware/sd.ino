@@ -75,11 +75,9 @@ String createNewPwd(String serviceName, String login, String pwdRule, String sug
       pwdRule = PWD_RULE_1;
     }
     if (!root) {
-        Keyboard.println("Failed to open directory");
         return "";
     }
     if (!root.isDirectory()) {
-        Keyboard.println("Not a directory");
         return "";
     }
     if(!pwd) {
@@ -106,6 +104,11 @@ String createNewPwd(String serviceName, String login, String pwdRule, String sug
 void addPwd(fs::FS &fs, const char * path, String newVal) {
   File file = fs.open(path, FILE_APPEND);
   file.print(padStringRight(newVal)+String("\n"));
+  file.close();
+}
+void addNoteData(fs::FS &fs, const char * path, String newVal) {
+  File file = fs.open(path, FILE_APPEND);
+  file.print(newVal);
   file.close();
 }
 
@@ -136,16 +139,12 @@ void updatePwdData(fs::FS &fs, const char * path, String serviceName, String log
 
 void updatePwd(fs::FS &fs, const char * path, String newVal, String type) {
   const String prevContents = readFile(fs, path);
-//    Keyboard.print(prevContents.substring(0, prevContents.length()-31) + padStringRight(newVal));
-//addPwd(fs, path, newVal);
-//    return;
   File file = fs.open(path, FILE_WRITE);
   file.seek(0);
   if (type == MENU_ITEM_EDIT_SERVICE) {
     file.print(padStringRight(newVal) + prevContents.substring(MAX_STRING_SIZE));
   } else if (type == MENU_ITEM_EDIT_LOGIN) {
     file.print(prevContents.substring(0, MAX_STRING_SIZE + 1) + padStringRight(newVal) + prevContents.substring(2*MAX_STRING_SIZE));
-//    Keyboard.print(prevContents.substring(0, 31) + padStringRight(newVal) + prevContents.substring(60));
   } else if (type == MENU_ITEM_EDIT_PWD_RULES) {
     file.print(prevContents.substring(0, MAX_STRING_SIZE * 2 + 2) + padStringRight(newVal) + prevContents.substring(MAX_STRING_SIZE*3+2));
   } else if(type == MENU_ITEM_EDIT_PWD_REGENERATE){
@@ -230,9 +229,7 @@ void deleteFile(const char *path) {
 //    file.close();
     
   if (SD_MMC.remove(path)) {
-//    Keyboard.println("File deleted");
   } else {
-//    Keyboard.println("Delete failed");
   }
 }
 
@@ -260,9 +257,7 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
             }
         } else {
             Serial.print("  FILE: ");
-            Keyboard.print(file.name());
             Serial.print("  SIZE: ");
-            Keyboard.println(file.size());
         }
         file = root.openNextFile();
     }

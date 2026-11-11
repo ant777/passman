@@ -17,7 +17,7 @@ export class PassManagerBLE {
     service = null;
     gattServer = {};
 
-    async init (dcCb: Function, listCb: Function, metaCb: Function){
+    async init (dcCb: Function, listCb: Function, metaCb: Function, noteCb: Function){
         try {
             var deviceOptions = {
                 optionalServices: [SERVICE_UUID, CHARACTERISTIC_UUID, 0xfe95, 0x1f10],
@@ -49,7 +49,7 @@ export class PassManagerBLE {
                 // catchAdvertisement(device);
             this.bluetoothDevice.addEventListener('gattserverdisconnected', dcCb);
                 // addLog("Connecting to: " + bluetoothDevice.name);
-            await this.connect(listCb, metaCb);
+            await this.connect(listCb, metaCb, noteCb);
               console.warn(device);
             return device;
         } catch(e) {
@@ -68,11 +68,12 @@ export class PassManagerBLE {
     parseListItem(rawItem: string): PasswordEntry|NoteEntry {
         const splitted = rawItem.split('||');
         const lengthRange = (splitted[4] || '').split('-');
+        console.warn(splitted)
         if (splitted[0].includes('.note'))
             return {
                 id: splitted[0],
                 title: splitted[1],
-                contents: splitted[2]
+                contents: decodeURIComponent(splitted[2])
             };
         if (splitted[0].includes('.card'))
             return {
@@ -94,7 +95,7 @@ export class PassManagerBLE {
         };
     }
 
-    async connect(listCb, metaCb) {
+    async connect(listCb, metaCb, noteCb) {
 
         try {
             const server = await this.bluetoothDevice.gatt.connect()
@@ -119,7 +120,9 @@ export class PassManagerBLE {
                     // Process the received data (e.g., as a DataView or ArrayBuffer)
                     console.log('Characteristic value changed:', value);
                     const parsed = value.trim().split('\n');
-                    if (parsed[0].trim() === 'list') {
+                    if (parsed[0].trim() === 'note') {
+                        this.noteCb(value.substr(6));
+                    }else if (parsed[0].trim() === 'list') {
                         const isFinal =  parsed.slice(1).filter(it => it === 'endoflist').length !== 0;
                         const newItems = parsed.slice(1).filter(it => it !== 'endoflist')
                         .filter(it => !!it.trim()).map(this.parseListItem);
@@ -128,6 +131,9 @@ export class PassManagerBLE {
                             listCb(temp);
                             temp=[];
                         }
+                    } else if(parsed[0].trim() === 'ready') {
+                        console.warn(parsed[0]);
+                        this.readyCb && this.readyCb()
                     } else if(parsed[0].trim() === 'meta') {
                         console.warn(parsed);
                         metaCb(value.trim());
@@ -182,10 +188,24 @@ export class PassManagerBLE {
             
             console.log("Found the LED characteristic: ", characteristic.uuid);
 
-            console.warn(pwdData);
             let data;
             if(pwdData.type == 'note') {
-                data =  new TextEncoder().encode('update\n' +pwdData.type + '\n' + pwdData.id + '\n' + pwdData.title + '\n' + pwdData.contents);
+                this.rest = pwdData.contents;
+                const chunk = this.rest.substr(0,100);
+                this.rest = this.rest.substr(100);
+                data =  new TextEncoder().encode('update\n' +pwdData.type + '\n' + pwdData.id + '\n' + pwdData.title + '\n' + chunk);
+                        console.warn('update\n' +pwdData.type + '\n' + pwdData.id + '\n' + pwdData.title + '\n' + chunk)
+                this.readyCb = () => {
+                    if (this.rest) {
+                        const chunk = this.rest.substr(0,100);
+                        this.rest = this.rest.substr(100);
+                        const data =  new TextEncoder().encode('partupdate\n' +pwdData.type + '\n' + pwdData.id + '\n' + chunk);
+                        characteristic.writeValueWithoutResponse(data);
+
+                    } else {
+                        this.readyCb = null;
+                    }
+                }
             }else if(pwdData.type == 'card') {
                 data =  new TextEncoder().encode('update\n' +pwdData.type + '\n' + pwdData.id + '\n' + pwdData.title + '\n' + pwdData.name + '\n' + pwdData.number + '\n' + pwdData.exp + '\n' + pwdData.cvc + '\n' + pwdData.pin);
             }else {
@@ -201,7 +221,7 @@ export class PassManagerBLE {
                 data = new TextEncoder().encode('update\n' +pwdData.type + '\n' + pwdData.id + '\n' + pwdData.service + '\n' + pwdData.username + '\n' + rule + (pwdData.password ? '\n' + pwdData.password : ''));
             }
                 characteristic.writeValueWithoutResponse(data);
-        }, 2000);
+        }, 1000);
     }
 
 
@@ -214,6 +234,10 @@ export class PassManagerBLE {
     async requestList(type) {
         const data = new TextEncoder().encode('requestlist_'+type);
         console.warn(type)
+        this.characteristic.writeValueWithoutResponse(data);
+    }
+    async requestNote(id) {
+        const data = new TextEncoder().encode('requestnote_'+id);
         this.characteristic.writeValueWithoutResponse(data);
     }
     async submitMeta(dataStr) {
@@ -248,6 +272,7 @@ export class PassManagerBLE {
         let data;
         if(pwdData.type == 'note') {
             data =  new TextEncoder().encode('create\n' +pwdData.type + '\n' + 'new\n' + pwdData.title + '\n' + pwdData.contents);
+            console.warn('create\n' +pwdData.type + '\n' + 'new\n' + pwdData.title + '\n' + pwdData.contents);
         }else if(pwdData.type == 'card') {
             data =  new TextEncoder().encode('create\n' +pwdData.type + '\n' + 'new\n' + pwdData.title + '\n' + pwdData.name + '\n' + pwdData.number + '\n' + pwdData.exp + '\n' + pwdData.cvc + '\n' + pwdData.pin);
         }else {

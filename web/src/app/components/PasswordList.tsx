@@ -187,20 +187,20 @@ export function PasswordList({ entries, onEdit, onDelete, onSort, type = "pwd" }
     }
   };
 
-  const sorted = useMemo(() => {
-    const filtered = entries.filter((ent) => {
-      return Object.values(sorting).map(it => `/${it}.${type}`).includes(ent.id);
-    });
-    const plain = entries.filter((ent) => {
-      return !Object.values(sorting).map(it => `/${it}.${type}`).includes(ent.id);
-    });
-    Object.keys(sorting).forEach((it, id) => {
-      const ind = plain.findIndex(x => x.id === `/${it}.${type}` );
+  // const sorted = useMemo(() => {
+  //   const filtered = entries.filter((ent) => {
+  //     return Object.values(sorting).map(it => `/${it}.${type}`).includes(ent.id);
+  //   });
+  //   const plain = entries.filter((ent) => {
+  //     return !Object.values(sorting).map(it => `/${it}.${type}`).includes(ent.id);
+  //   });
+  //   Object.keys(sorting).forEach((it, id) => {
+  //     const ind = plain.findIndex(x => x.id === `/${it}.${type}` );
 
-      plain.splice(ind, 0, filtered.filter(sit => sit.id === `/${sorting[it]}.${type}`)[0]);
-    }, []);
-    return plain;
-  }, [entries, sorting]);
+  //     plain.splice(ind, 0, filtered.filter(sit => sit.id === `/${sorting[it]}.${type}`)[0]);
+  //   }, []);
+  //   return plain;
+  // }, [entries, sorting]);
 
 
   const cancelDelete = () => {

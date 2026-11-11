@@ -1,3 +1,9 @@
+#define USE_NIMBLE
+#include "BleKeyboard.h"
+#include "esp_system.h"
+
+BleKeyboard bleKeyboard;
+
   //#include "FS.h"
 //#include "SPI.h"
 #include "SD_MMC.h"
@@ -38,7 +44,7 @@ Preferences preferences;
 int restartCount = 0;
 
 CRGB leds[1];
-CRGB colors[4] = {CRGB::Red, CRGB::Green, CRGB::Blue, CRGB::Black};
+CRGB colors[5] = {CRGB::Red, CRGB::Green, CRGB::Blue, CRGB::Black, CRGB::Cyan};
 
 
 #define MOUNT_POINT "/sdcard"
@@ -208,9 +214,11 @@ String enqueueUpdate = "";
 String enqueueUpdateCardFlag = "";
 bool enqueueCreateNote = false;
 String enqueueUpdateNoteFlag = "";
+String enqueuePartUpdateNoteFlag = "";
 String enqueueUpdateMeta = "";
 bool enqueueRequestMeta = false;
 String enqueueSendList = "";
+String enqueueRequestNote = "";
 String enqueueRenameType = "";
 int enqueueRenameFrom = -1;
 int enqueueRenameTo = -1;
@@ -266,7 +274,7 @@ CardFile parseCardFile(String fileContents, bool toCurrent = true) {
 }
 NoteFile parseNoteFile(String fileContents, bool toCurrent = true) {
     String title = fileContents.substring(0, fileContents.indexOf('\n'));
-    String contents = fileContents.substring(fileContents.indexOf('\n') + 2);
+    String contents = fileContents.substring(fileContents.indexOf('\n') + 1);
     if (toCurrent) {
       currentService = title;
       currentLogin = contents;
@@ -278,6 +286,47 @@ NoteFile parseNoteFile(String fileContents, bool toCurrent = true) {
     return res;
 }
 
+
+bool isBTKeyboardModeActive = false;
+void toggleKeyboardMode(bool reenable = false) {
+  preferences.begin("passman", false);
+  if(!reenable) {
+    isBTKeyboardModeActive = !isBTKeyboardModeActive;
+    preferences.putString("mode", isBTKeyboardModeActive ? "bt" : "");
+    ESP.restart();
+  }
+  
+  if (isBTKeyboardModeActive) {
+    bleKeyboard.begin();
+    bleKeyboard.setBatteryLevel(50);
+    bleKeyboard.setDelay(30);
+    FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, 1);  // BGR ordering is typical
+    FastLED.setBrightness(100);
+    leds[0] = colors[4];
+    FastLED.show();
+  }else
+  if (autostartBluetooth) {
+        
+        // Define your custom MAC address (ensure bit 0 of the first byte is NOT 1)
+        uint8_t new_mac[6] = {0x24, 0x0A, 0xC4, 0x01, 0x02, 0x03};
+        // Set the base MAC address (affects both Wi-Fi and Bluetooth)
+        esp_base_mac_addr_set(new_mac); 
+    
+  
+      preferences.end();
+
+ 
+    setupBLEServer();
+  }
+}
+
+void keyboardPrint(String val) {
+  if (isBTKeyboardModeActive) {
+    bleKeyboard.print(val);
+  } else {
+    Keyboard.print(val);
+  }
+}
 
 void parsePwdFile(String fileContents, bool toCurrent = true) {
 //    FILE *f = fopen(filename, "a");
@@ -319,9 +368,7 @@ void parsePwdFile(String fileContents, bool toCurrent = true) {
 }
 
 String getCurrentFileName() {
-//  Keyboard.print('/' + filenames[currentInd].c_str());
    return '/' + String(getFilenames()[currentInd].c_str());
-//   return '/' + String(currentInd) + String(".pwd");
 }
 
 bool compareNat(const std::string& a, const std::string& b)
@@ -471,7 +518,7 @@ void getPassList(String (&arr)[PASS_LIST_SIZE]) {
 //        if (sortingPwdConf.indexOf(sortIndKey) != -1) {
 //          int startInd = sortingPwdConf.indexOf(sortIndKey);
 //          String overridden = sortingPwdConf.substring(startInd + sortIndKey.length(), sortingPwdConf.indexOf(";", startInd + sortIndKey.length()));
-//      Keyboard.print(overridden);15
+
 //          fName1 = '/' + String(overridden.c_str())+".pwd";
 //      
 //        }
@@ -532,7 +579,6 @@ void renderPass() {
   //  !!
 
   String fileName = getCurrentFileName();
-//  Keyboard.print(fileList[48]);
   const char* fName = fileName.c_str();
   String readValue = readFile(SD_MMC, fName);
 //    String readValue = readNextFile(root);
@@ -686,18 +732,6 @@ void handleLongClick() {
     screenType = 0;
     renderPass();
   }
-//  Serial.println(lines_array[currentInd]);
-//  char sourceStr[512];
-//  strcpy(sourceStr, lines_array[currentInd]);
-//  char* pch1 = strtok(sourceStr, ",");
-//  Keyboard.print(pch1);
-//  Keyboard.print(",");
-//  pch1 = strtok(NULL, ",");
-//  Keyboard.print(pch1);
-//  Keyboard.print(",");
-//  pch1 = strtok(NULL, ",");
-//  pch1 = strtok(NULL, ",");
-//  Keyboard.print(pch1);
   return;
 }
 
@@ -753,6 +787,9 @@ void handleIncomingBLERequest() {
 void handleMultiClick() {
   int clicks = button.getNumberClicks();
   if (clicks == 3) {
+    if (screenType == -1) {
+      toggleKeyboardMode();
+    }else
     if (screenType == 0) {
       if (passListEnabled && passListVisible && passListActive == true) {
         passListActive = false;
@@ -761,7 +798,6 @@ void handleMultiClick() {
         screenType = -1;
         currentInd = 0;
         sectionsMenu.render();
-//        Keyboard.print(currentLogin);
       }else {
         passListVisible = true;
         passListActive = false;
@@ -772,11 +808,10 @@ void handleMultiClick() {
   }
   if (clicks == 4) {
     if (screenType == 0) {
-      Keyboard.print(currentLogin);
+      keyboardPrint(currentLogin);
     }
   }
 }
-
 void handleDoubleClick() {
   if (screenType == 0) {
   
@@ -790,19 +825,28 @@ void handleDoubleClick() {
     }else{
       // Open NVS namespace "my-app" in read-write mode (false)
       preferences.begin("passman", false);
-    
       String recents = preferences.getString("recents", "");
 
       String newRecents = recents;
+      newRecents.replace(getCurrentFileName()+",", "");
       newRecents.replace("," + getCurrentFileName(), "");
       newRecents.replace(getCurrentFileName(), "");
-    
+      int ind = 0;
+      int countSlashes = 0;
+      while (countSlashes < 4 && ind != -1) {
+        ind = newRecents.indexOf(',', ind + 1);
+        if (ind != -1) {
+          countSlashes += 1;
+        }
+      }
+      if (countSlashes == 4 && ind > 0) {
+        newRecents = newRecents.substring(0, ind);
+      }
       preferences.putString("recents", newRecents ? getCurrentFileName() + ',' + newRecents : getCurrentFileName());
     
       // Close the NVS handle
       preferences.end();
-      //  Keyboard.print(restartCount);
-      Keyboard.print(currentPwd);
+      keyboardPrint(currentPwd);
       if(autopressEnter) {
         Keyboard.write(KEY_RETURN);
       }
@@ -837,7 +881,7 @@ void handleDoubleClick() {
       screenType = 2;
       renderSubMenu();
     } else if (getCurrentMenuItem() == MENU_ITEM_PREV_PWD) {
-      Keyboard.print(currentPrevPwd);    
+      keyboardPrint(currentPrevPwd);    
     }  else if (getCurrentMenuItem() == MENU_ITEM_DUMP_ITEM) {
       dumpItem(currentService, currentLogin, currentPwd);
     } else if (getCurrentMenuItem() == MENU_ITEM_DUMP_ALL) {
@@ -925,7 +969,9 @@ String getCommonDataString(String type, int offset = 0) {
       }
       if(type == "note") {
         NoteFile res = parseNoteFile(readValue);
-        result += String(fName1) + "||" + res.title + "||" + String(res.contents.c_str()) + postfix;
+        String val = String(res.contents.c_str());
+        val.replace("\n", "%0A");
+        result += String(fName1) + "||" + res.title + "||" + val.substring(0,20) + postfix;
       } else if(type == "card") {
         CardFile res = parseCardFile(readValue); 
         result += String(fName1) + "||" + res.title + "||" + res.name + "||" + res.number + "||" + res.exp + "||" + res.cvc + "||" + res.pin + postfix;
@@ -1021,14 +1067,14 @@ void loadMetaData() {
     char* titleColorR = strtok(NULL, ",");
     char* titleColorG = strtok(NULL, ",");
     char* titleColorB = strtok(NULL, ",");
-//  Keyboard.print(",");
-//  pch1 = strtok(NULL, ",");
+    
     THEME_BG_COLOR = tft.color565(atoi(bgColorR), atoi(bgColorG), atoi(bgColorB));
     THEME_HIGHLIGHT_COLOR = tft.color565(atoi(hilitColorR), atoi(hilitColorG), atoi(hilitColorB));
     THEME_FONT_COLOR = tft.color565(atoi(fontColorR), atoi(fontColorG), atoi(fontColorB));
     THEME_TITLE_COLOR = tft.color565(atoi(titleColorR), atoi(titleColorG), atoi(titleColorB));
   }
 }
+
 void setup() {
   Serial.begin(115200);
   randomSeed(analogRead(0));
@@ -1043,6 +1089,9 @@ void setup() {
   
 
 
+  preferences.begin("passman", false);
+  isBTKeyboardModeActive = preferences.getString("mode", "") == "bt";
+      preferences.end();
 
   digitalWrite(TFT_LEDA_PIN, 0);
 
@@ -1059,9 +1108,7 @@ void setup() {
   loadMetaData();
   loadLocale(0);
   sectionsMenu.setLocale(locale);
-  if (autostartBluetooth) {
-    setupBLEServer();
-  }
+  toggleKeyboardMode(true);
 
   String labels[4] = {LABEL_PASSWORDS, LABEL_RECENTS, LABEL_CREDIT_CARDS, LABEL_NOTES};
   sectionsMenu.setLabels(labels);
@@ -1098,6 +1145,9 @@ void setEnqueueRequestMeta() {
 void setEnqueueRequestList(String val) {
   enqueueSendList = val;
 }
+void setEnqueueRequestNote(String val) {
+  enqueueRequestNote = val;
+}
 void setEnqueueAllowConnection() {
   enqueueAllowConnection = 1;
 }
@@ -1131,6 +1181,11 @@ void enqueueUpdateCard(String fileName, String title, String cname, String numbe
   newPIN = pin;
   enqueueUpdateCardFlag = fileName;
   
+}
+void enqueuePartUpdateNote(String fileName, String contents) {
+  
+  enqueuePartUpdateNoteFlag = fileName;
+  newContents = contents;
 }
 void enqueueUpdateNote(String fileName, String title, String contents) {
   newTitle = title;
@@ -1227,6 +1282,11 @@ void loop() {
     enqueueRequestMeta = false;
     sendMeta();
   }
+  if (enqueueRequestNote != "") {
+    String note = readFile(SD_MMC, enqueueRequestNote.c_str());
+    enqueueRequestNote = "";
+    fetchDataNote(note.substring(note.indexOf("\n")+2));
+  }
   if (enqueueSendList != "") {
     fetchData(enqueueSendList);
     enqueueSendList = "";
@@ -1307,11 +1367,18 @@ void loop() {
     }
     updateCurrentStateBle();
   }
+  if (enqueuePartUpdateNoteFlag != "" && newContents) {
+    addNoteData(SD_MMC, enqueuePartUpdateNoteFlag.c_str(), newContents);
+    enqueuePartUpdateNoteFlag = "";
+    reportReady();
+    newContents = "";
+  }
   if (enqueueUpdateNoteFlag != "" && newTitle) {
     char fName[120];
     strcpy(fName, enqueueUpdateNoteFlag.c_str());
     enqueueUpdateNoteFlag = "";
     updateNoteData(SD_MMC, fName, newTitle, newContents);
+    reportReady();
     newTitle = "";
     newContents = "";
     
