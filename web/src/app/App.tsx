@@ -283,6 +283,19 @@ passManagerBLE.noteCb = useCallback((note) => {
 
         {!connected && (
           <div className="relative flex flex-col justify-center items-center min-h-[300px] overflow-auto">
+            
+            {/* <div>
+              <h3>Beneftis</h3>
+              <h4>Simple and intuitive initerface</h4>
+              <h4>Open source</h4>
+              <h4>Works offline</h4>
+              <h4>Standalone, no third-party integrations</h4>
+              <h4>No staistics sent</h4>
+              <h4>No Backend data stored</h4>
+              <h4>Extra backup options</h4>
+              <h4>Is supported on most of deices with usbor bluetooth connection</h4>
+              <h4>Flexible hardware options</h4>
+            </div> */}
             <button
               onClick={async () => {
                 const device = await passManagerBLE.init(() => {

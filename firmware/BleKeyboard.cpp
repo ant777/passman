@@ -103,19 +103,19 @@ BleKeyboard::BleKeyboard(std::string deviceName, std::string deviceManufacturer,
 
 void BleKeyboard::begin(void)
 {
-  BLEDevice::init(deviceName);
+  BLEDevice::init(String(deviceName.c_str()));
   BLEServer* pServer = BLEDevice::createServer();
   pServer->setCallbacks(this);
-
+//
   hid = new BLEHIDDevice(pServer);
   inputKeyboard = hid->inputReport(KEYBOARD_ID);  // <-- input REPORTID from report map
   outputKeyboard = hid->outputReport(KEYBOARD_ID);
   inputMediaKeys = hid->inputReport(MEDIA_KEYS_ID);
-
+//
   outputKeyboard->setCallbacks(this);
-
-  hid->manufacturer()->setValue(deviceManufacturer);
-
+//
+//  hid->manufacturer(String(deviceManufacturer.c_str()));
+//
   hid->pnp(0x02, vid, pid, version);
   hid->hidInfo(0x00, 0x01);
 
@@ -506,9 +506,9 @@ void BleKeyboard::onConnect(BLEServer* pServer) {
 #if !defined(USE_NIMBLE)
 
   BLE2902* desc = (BLE2902*)this->inputKeyboard->getDescriptorByUUID(BLEUUID((uint16_t)0x2902));
-  desc->setNotifications(true);
-  desc = (BLE2902*)this->inputMediaKeys->getDescriptorByUUID(BLEUUID((uint16_t)0x2902));
-  desc->setNotifications(true);
+//  desc->setNotifications(true);
+//  desc = (BLE2902*)this->inputMediaKeys->getDescriptorByUUID(BLEUUID((uint16_t)0x2902));
+//  desc->setNotifications(true);
 
 #endif // !USE_NIMBLE
 

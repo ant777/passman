@@ -28,6 +28,10 @@ class MyServerCallbacks: public BLEServerCallbacks {
 
 };
 
+bool isConnected() {
+  return deviceConnected;
+};
+
 void allowConnection() {
   deviceAllowed = true;
   String dataStr;
@@ -86,7 +90,8 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
         if(!deviceAllowed){
           return;
         }
-        std::string value = onCharacteristic->getValue();
+        String arduinoStr = onCharacteristic->getValue();
+        std::string value = std::string(arduinoStr.c_str(), arduinoStr.length());
         if (value.length() > 0) {
           if (value == "requestmeta") {
             setEnqueueRequestMeta();

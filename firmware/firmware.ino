@@ -1,7 +1,7 @@
-#define USE_NIMBLE
+//#define USE_NIMBLE
 #include "BleKeyboard.h"
 #include "esp_system.h"
-
+#include "esp_mac.h"
 BleKeyboard bleKeyboard;
 
   //#include "FS.h"
@@ -322,7 +322,10 @@ void toggleKeyboardMode(bool reenable = false) {
 
 void keyboardPrint(String val) {
   if (isBTKeyboardModeActive) {
-    bleKeyboard.print(val);
+    for (unsigned int i = 0; i < val.length(); i++) {
+      bleKeyboard.write(val[i]);
+      delay(15); 
+    }
   } else {
     Keyboard.print(val);
   }
@@ -1080,7 +1083,6 @@ void setup() {
   randomSeed(analogRead(0));
   Keyboard.begin();
   USB.begin();
-  Serial.println("Start");
   tft.init();
   tft.setRotation(-1);
   tft.fillScreen(THEME_BG_COLOR);
@@ -1245,7 +1247,9 @@ void renameRecurse (String renType, int from, int to) {
   renameFile(SD_MMC, tempName, toName);
 }
 
-
+void toggleLed() {
+  
+}
 
 void loop() {
   button.tick();
@@ -1261,6 +1265,20 @@ void loop() {
     renderPass();
     updateCurrentStateBle();
   }
+    if (isBTKeyboardModeActive && !bleKeyboard.isConnected() ||!isBTKeyboardModeActive && !isConnected()) {
+
+      if (int(floor(millis()/500)) % 2 == 0) {
+        FastLED.setBrightness(0);
+        FastLED.show();
+      } else {
+        FastLED.setBrightness(100);
+        FastLED.show();
+      }
+    }else{
+      
+        FastLED.setBrightness(100);
+        FastLED.show();
+    }
   if (enqueueRenameType != "") {
 
     renameRecurse(enqueueRenameType, enqueueRenameFrom, enqueueRenameTo);

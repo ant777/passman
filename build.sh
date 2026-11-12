@@ -45,8 +45,8 @@ if [ "$3" = "pack" ] || [ "$1" = "pack" ] ; then
     echo $VERSION_STRING 
     cd ../arduino
     mkdir -p ../passman/docs/res/firmware/$VERSION_STRING
-    python3 /home/ant777/snap/arduino/85/.arduino15/packages/esp32/tools/esptool_py/4.5.1/esptool.py --chip esp32s3 merge_bin --flash_mode dio --flash_size keep --flash_freq 80m 0x0 firmware.ino.bootloader.bin 0x00008000 firmware.ino.partitions.bin 0x00010000 firmware.ino.bin -o ../passman/docs/res/firmware/$VERSION_STRING/passman.bin
-
+    # python3 /home/ant777/snap/arduino/85/.arduino15/packages/esp32/tools/esptool_py/4.5.1/esptool.py --chip esp32s3 merge_bin --flash_mode dio --flash_size keep --flash_freq 80m 0x0 firmware.ino.bootloader.bin 0x00008000 firmware.ino.partitions.bin 0x00010000 firmware.ino.bin -o ../passman/docs/res/firmware/$VERSION_STRING/passman.bin
+    /home/ant777/snap/arduino/97/.arduino15/packages/esp32/tools/esptool_py/5.3.1/esptool --chip esp32s3 merge-bin -o ../passman/docs/res/firmware/$VERSION_STRING/passman.bin --flash-mode keep --flash-freq keep --flash-size keep 0x0 /home/ant777/prj/arduino/firmware.ino.bootloader.bin 0x8000 /home/ant777/prj/arduino/firmware.ino.partitions.bin 0xe000 /home/ant777/snap/arduino/97/.arduino15/packages/esp32/hardware/esp32/3.3.12/tools/partitions/boot_app0.bin 0x10000 /home/ant777/prj/arduino/firmware.ino.bin
     cd $CWD
     sed -i "s/\',]/\',\\n\'$NEW_VERSION\',]/" "$WEB_VERSION_FILE"
     cp ./docs/res/manifest.json ./docs/res/firmware/$VERSION_STRING/manifest.json
