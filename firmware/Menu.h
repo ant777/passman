@@ -21,6 +21,7 @@ class Menu {
     int getCurrentInd();
     void setLabels(String labels[4]);
     void setLocale(String locale);
+    void setIsBtMode(bool isBtMode);
     void setColor(uint16_t fontColor, uint16_t bgColor);
   private:
     TFT_eSPI& tft;
@@ -29,6 +30,7 @@ class Menu {
     int currentInd = 0;
     String labels[4];
     String locale;
+    bool isBtMode;
 };
 
 #endif

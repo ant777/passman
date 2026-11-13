@@ -152,7 +152,7 @@ private:
   uint16_t version   = 0x0210;
 
 public:
-  BleKeyboard(std::string deviceName = "ESP32 Keyboard", std::string deviceManufacturer = "Espressif", uint8_t batteryLevel = 100);
+  BleKeyboard(std::string deviceName = "Passman Keys", std::string deviceManufacturer = "Passman", uint8_t batteryLevel = 100);
   void begin(void);
   void end(void);
   void sendReport( KeyReportBLE* keys);

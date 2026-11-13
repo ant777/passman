@@ -95,6 +95,33 @@ static const uint8_t _hidReportDescriptor[] = {
   END_COLLECTION(0)                  // END_COLLECTION
 };
 
+class MySecurityCallbacks : public BLESecurityCallbacks {
+
+  // Запрос безопасности от клиента: возвращаем true для подтверждения
+  bool onSecurityRequest() override {
+    Serial.println("On Security Request!");
+    return true; 
+  }
+
+  // Запрос ввода PIN-кода (Passkey)
+  uint32_t onPassKeyRequest() override {
+    Serial.println("PassKeyRequest!");
+    uint32_t passkey = 123451; // Укажите ваш PIN-код (6 цифр)
+    return passkey;
+  }
+
+  // Уведомление о сгенерированном Passkey (для Numeric Comparison / Display)
+  void onPassKeyNotify(uint32_t pass_key) override {
+    Serial.printf("On passkey Notify number: %d\n", pass_key);
+  }
+
+  // Подтверждение PIN-кода (Yes/No)
+  bool onConfirmPIN(uint32_t pin) override {
+    Serial.printf("onConfirmPIN! PIN: %d\n", pin);
+    return true; // Возвращаем true, если PIN совпадает
+  }
+};
+
 BleKeyboard::BleKeyboard(std::string deviceName, std::string deviceManufacturer, uint8_t batteryLevel) 
     : hid(0)
     , deviceName(std::string(deviceName).substr(0, 15))

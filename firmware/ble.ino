@@ -258,7 +258,7 @@ void setupBLEServer() {
 
     FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, 1);  // BGR ordering is typical
     FastLED.setBrightness(100);
-    leds[0] = colors[2];
+    leds[0] = colors[4];
     FastLED.show();
     Serial.println("Waiting for a client connection...");
 }

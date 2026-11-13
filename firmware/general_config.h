@@ -1,5 +1,5 @@
 #pragma once
-const String FIRMWARE_VERSION = "0.0.17";
+const String FIRMWARE_VERSION = "0.0.18";
 const int MAX_STRING_SIZE = 64;
 const int INPUT_AUTO_SWITCH_TIMEOUT = 1500;
 

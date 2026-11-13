@@ -302,7 +302,7 @@ void toggleKeyboardMode(bool reenable = false) {
     bleKeyboard.setDelay(30);
     FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, 1);  // BGR ordering is typical
     FastLED.setBrightness(100);
-    leds[0] = colors[4];
+    leds[0] = colors[2];
     FastLED.show();
   }else
   if (autostartBluetooth) {
@@ -1093,6 +1093,7 @@ void setup() {
 
   preferences.begin("passman", false);
   isBTKeyboardModeActive = preferences.getString("mode", "") == "bt";
+  sectionsMenu.setIsBtMode(isBTKeyboardModeActive);
       preferences.end();
 
   digitalWrite(TFT_LEDA_PIN, 0);
