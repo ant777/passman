@@ -90,7 +90,7 @@ void Menu::render(String label) {
       drawSVGRecents(tft, 36, 17);
       drawSVGCredit_card(tft, 80, 20);
       drawSVGNotepad_text(tft, 114, 20); 
-      if (!this->isBtMode) {
+      if (this->isBtMode) {
         tft.drawBitmap(130, 52, epd_bitmap_bluetooth_svgrepo_com__1_, 18, 18, fontColor);
         
       }else {

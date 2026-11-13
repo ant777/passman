@@ -154,7 +154,7 @@ void BleKeyboard::begin(void)
 #else
 
   BLESecurity* pSecurity = new BLESecurity();
-  pSecurity->setAuthenticationMode(ESP_LE_AUTH_BOND);
+  pSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_MITM); //ESP_LE_AUTH_BOND
 
 #endif // USE_NIMBLE
 
